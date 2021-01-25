@@ -29,6 +29,7 @@ arm_position_controller:
     - joint2
     - joint3
     - joint4
+    - joint0
   gains:
     joint1:
       p: 100
@@ -46,6 +47,11 @@ arm_position_controller:
       i: 1
       i_clamp: 1
     joint4:
+      p: 100
+      d: 1
+      i: 1
+      i_clamp: 1
+    joint0:
       p: 100
       d: 1
       i: 1

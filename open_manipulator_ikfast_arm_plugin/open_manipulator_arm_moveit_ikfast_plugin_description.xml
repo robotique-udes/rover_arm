@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<library path="lib/libopen_manipulator_arm_moveit_ikfast_plugin">
+  <class base_class_type="kinematics::KinematicsBase" name="open_manipulator_arm/IKFastKinematicsPlugin" type="open_manipulator_arm::IKFastKinematicsPlugin">
+    <description>IKFast61 plugin for closed-form kinematics of open_manipulator arm</description>
+  </class>
+</library>

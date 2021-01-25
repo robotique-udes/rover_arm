@@ -2,6 +2,16 @@
 <!-- Open_Manipulator Chain -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
+  <!-- Base link (link 0) -->
+  <link name="link0"/>
+  
+  <!-- Joint 0 -->
+  <joint name="joint0" type="fixed">
+    <parent link="link0"/>
+    <child link="link1"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+  
   <!-- Link 1 -->
   <link name="link1">
     <visual>

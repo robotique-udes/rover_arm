@@ -1,0 +1,6 @@
+<robot file="open_manipulator_robot.dae">
+  <Manipulator name="open_manipulator_robot.urdf">
+    <base>link0</base>
+    <effector>end_effector_link</effector>
+  </Manipulator>
+</robot>

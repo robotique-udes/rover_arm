@@ -19,6 +19,7 @@
   <build_depend>rospy</build_depend>
   <build_depend>ros_controllers</build_depend>
   <build_depend>industrial_core</build_depend>
+  <build_depend>collada_urdf</build_depend>
 
   <exec_depend>moveit_core</exec_depend>
   <exec_depend>moveit_commander</exec_depend>

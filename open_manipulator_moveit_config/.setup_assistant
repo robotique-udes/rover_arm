@@ -8,4 +8,4 @@ moveit_setup_assistant_config:
   CONFIG:
     author_name: Jeremie Bourque
     author_email: jeremie.bourque@usherbrooke.ca
-    generated_timestamp: 1611513439
+    generated_timestamp: 1611537419
