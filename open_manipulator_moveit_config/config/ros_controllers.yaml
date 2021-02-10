@@ -9,7 +9,6 @@ generic_hw_control_loop:
 # Settings for ros_control hardware interface
 hardware_interface:
   joints:
-    - joint1
     - joint2
     - joint3
     - joint4
@@ -25,17 +24,10 @@ controller_list:
 arm_position_controller:
   type: position_controllers/JointPositionController
   joints:
-    - joint1
     - joint2
     - joint3
     - joint4
-    - joint0
   gains:
-    joint1:
-      p: 100
-      d: 1
-      i: 1
-      i_clamp: 1
     joint2:
       p: 100
       d: 1
@@ -47,11 +39,6 @@ arm_position_controller:
       i: 1
       i_clamp: 1
     joint4:
-      p: 100
-      d: 1
-      i: 1
-      i_clamp: 1
-    joint0:
       p: 100
       d: 1
       i: 1
