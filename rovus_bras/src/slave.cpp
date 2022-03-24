@@ -6,12 +6,10 @@
 
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
-    ROS_INFO("Vitesse M1 = %f", msg.m1);
-    ROS_INFO("Vitesse M2 = %f", msg.m2);
-    ROS_INFO("Vitesse M3 = %f", msg.m3);
-    ROS_INFO("Vitesse M4 = %f\n\n", msg.m4);
+    ROS_INFO("Received : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f \n\n", msg.m1, msg.m2, msg.m3, msg.m4);
+
 }
- 
+
 
 int main(int argc, char **argv)
 {
@@ -24,26 +22,23 @@ int main(int argc, char **argv)
     ros::Subscriber sub = n.subscribe("vitesses_moteur", 5, callback);
 
     ros::Publisher pub = n.advertise<rovus_bras::angle>("valeurAngles", 1000);
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(500);
 
     while (ros::ok())
     {
+        //Créer et publier message
         rovus_bras::angle msg;
-
-        msg.j1 = 1;
-        msg.j2 = 1;
-        msg.j3 = 1;
-        msg.j4 = 1;
-
-        ROS_INFO("J1 = %d", msg.j1);
-        ROS_INFO("J2 = %d", msg.j2);
-        ROS_INFO("J3 = %d", msg.j3);
-        ROS_INFO("J4 = %d\n\n", msg.j4);   
+        msg.j1 = 35;
+        msg.j2 = 40;
+        msg.j3 = 45;
+        msg.j4 = 50;
+        ROS_INFO("Sending: \nJ1:\t%d \nJ2:\t%d \nJ3:\t%d \nJ4:\t%d \n\n", msg.j1, msg.j2, msg.j3, msg.j4); 
         pub.publish(msg);
 
         ros::spinOnce();
 
         loop_rate.sleep();
+        
     }
 
     return 0;

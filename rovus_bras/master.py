@@ -6,13 +6,36 @@
 # source ~/rovus0/devel/setup.bash
 
 
+from tkinter import Button
+from weakref import KeyedRef
 import numpy as np
 from numpy.linalg import inv
 import math as m
 import rospy
 from rovus_bras.msg import vitesse_moteur_msg
 from rovus_bras.msg import angle
+from sensor_msgs.msg import Joy
 
+#Constantes
+pi = 3.14159265359
+fact_vitesse = 1 #en cm/s --> Max 10 cm/s
+
+#Classes globales
+class controller():
+    a = 0
+    b = 0
+    x = 0
+    y = 0
+    lt = 0
+    rt = 0
+class ctrl_mouvement():
+    x = 0
+    z = 0
+    y = 0
+    
+controller_1 = controller()
+v = ctrl_mouvement()
+    
 
 def calcul_vitesse(robot, axe):
     #angles initiaux
@@ -58,34 +81,61 @@ def calcul_vitesse(robot, axe):
     motorspeed = np.matmul(inv(j), axe)
     return motorspeed[0], motorspeed[1], motorspeed[2], motorspeed[3]
 
+def angle_rad(deg):
+    rad=180*deg/pi
+    return rad
+
+def axes():
+    v.x = (controller_1.y - controller_1.a)/(fact_vitesse*100)
+    v.y = (controller_1.rt - controller_1.lt)/(fact_vitesse*100)
+    v.z = (controller_1.x - controller_1.b)/(fact_vitesse*100)
+
+def joy_callback(Joy: Joy):
+    controller_1.a = Joy.buttons[0]
+    controller_1.x = Joy.buttons[1]
+    controller_1.y = Joy.buttons[2]
+    controller_1.b = Joy.buttons[3]
+    controller_1.lt = Joy.buttons[4]
+    controller_1.rt = Joy.buttons[5]
 
 def angle_callback(angle: angle):
+    #Définir type de message
     cmd = vitesse_moteur_msg()
 
 
-    bras = np.array([[angle.j1],
-                     [angle.j2],
-                     [angle.j3],
-                     [angle.j4]])
+#Calcul des vitesses moteurs et publier au topic   
+    bras = np.array([[angle_rad(angle.j1)],
+                     [angle_rad(angle.j2)],
+                     [angle_rad(angle.j3)],
+                     [angle_rad(angle.j4)]])
 
-    #faire le publisher (commande avec la manette)
-    ctrl = np.array([[1],
-                     [0],
-                     [0],
+
+    axes() #transfere les inputs en cm/s
+    ctrl = np.array([[v.x],
+                     [v.y],
+                     [v.z],
                      [0]])
-
     cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+
+    
+    #Commenter pour ne plus recevoir de feedback dans la console
+    #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
+    rospy.loginfo(ctrl)
+    #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
     pub.publish(cmd)
 
-    rospy.loginfo('Sending : \n%f \n%f \n%f \n%f', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
 
 
 if __name__=='__main__':
-    rospy.init_node('master2')
+    rospy.init_node('master')
 
     pub = rospy.Publisher('vitesses_moteur', vitesse_moteur_msg, queue_size=10)
-    sub = rospy.Subscriber("valeurAngles", angle, callback=angle_callback)
+    #Sub au controlleur
+    sub_ctrl = rospy.Subscriber('joy', Joy, callback=joy_callback)
+    #Sub aux valeurs d'angles
+    sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
+
 
     rospy.spin()
