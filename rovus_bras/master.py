@@ -5,9 +5,6 @@
 # Don't forget to source before run
 # source ~/rovus0/devel/setup.bash
 
-
-from tkinter import Button
-from weakref import KeyedRef
 import numpy as np
 from numpy.linalg import inv
 import math as m
@@ -16,10 +13,15 @@ from rovus_bras.msg import vitesse_moteur_msg
 from rovus_bras.msg import angle
 from sensor_msgs.msg import Joy
 
-#Constantes
+#------------------------------------------------------------------------------------
+#Constantes et variables globales
 pi = 3.14159265359
-fact_vitesse = 1 #en cm/s --> Max 10 cm/s
+debounce_time = 4000 #for toggles in msec
+fine_speed = 100 #division of m/s ex: 100 = cm/s
+coarse_speed = 10 #division of m/s ex: 100 = cm/s
+fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 
+#------------------------------------------------------------------------------------
 #Classes globales
 class controller():
     a = 0
@@ -28,6 +30,7 @@ class controller():
     y = 0
     lt = 0
     rt = 0
+    adjustment = 0
 class ctrl_mouvement():
     x = 0
     z = 0
@@ -36,7 +39,7 @@ class ctrl_mouvement():
 controller_1 = controller()
 v = ctrl_mouvement()
     
-
+#------------------------------------------------------------------------------------
 def calcul_vitesse(robot, axe):
     #angles initiaux
     angle1 = robot[0]
@@ -86,17 +89,43 @@ def angle_rad(deg):
     return rad
 
 def axes():
-    v.x = (controller_1.y - controller_1.a)/(fact_vitesse*100)
-    v.y = (controller_1.rt - controller_1.lt)/(fact_vitesse*100)
-    v.z = (controller_1.x - controller_1.b)/(fact_vitesse*100)
+    if fine_coarse_toggle == 0:
+        if controller_1.adjustment == 0:
+            v.x = (controller_1.y - controller_1.a)/(fine_speed)
+            v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
+            v.z = (controller_1.x - controller_1.b)/(fine_speed)
 
+        elif controller_1.adjustment == 1:
+            v.x = (controller_1.y - controller_1.a)/(coarse_speed)
+            v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
+            v.z = (controller_1.x - controller_1.b)/(coarse_speed)   
+
+
+    if fine_coarse_toggle == 1:
+        if controller_1.adjustment == 1:
+            v.x = (controller_1.y - controller_1.a)/(fine_speed)
+            v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
+            v.z = (controller_1.x - controller_1.b)/(fine_speed)
+
+        elif controller_1.adjustment == 0:
+            v.x = (controller_1.y - controller_1.a)/(coarse_speed)
+            v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
+            v.z = (controller_1.x - controller_1.b)/(coarse_speed)
+
+
+
+#------------------------------------------------------------------------------------
 def joy_callback(Joy: Joy):
+    
     controller_1.a = Joy.buttons[0]
     controller_1.x = Joy.buttons[1]
     controller_1.y = Joy.buttons[2]
     controller_1.b = Joy.buttons[3]
     controller_1.lt = Joy.buttons[4]
     controller_1.rt = Joy.buttons[5]
+    controller_1.adjustment = Joy.buttons[8]
+    rospy.loginfo('\n fine buttons pressed?: %d', controller_1.adjustment)
+    #controller_1.timestamp = Joy.header.stamp.nsecs/1000 #--> gets time between command for debouncing toggles in msec
 
 def angle_callback(angle: angle):
     #Définir type de message
@@ -108,8 +137,7 @@ def angle_callback(angle: angle):
                      [angle_rad(angle.j2)],
                      [angle_rad(angle.j3)],
                      [angle_rad(angle.j4)]])
-
-
+    
     axes() #transfere les inputs en cm/s
     ctrl = np.array([[v.x],
                      [v.y],
@@ -120,14 +148,12 @@ def angle_callback(angle: angle):
     
     #Commenter pour ne plus recevoir de feedback dans la console
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
-    rospy.loginfo(ctrl)
+    #rospy.loginfo(ctrl)
     #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
     pub.publish(cmd)
 
-
-
-
+#------------------------------------------------------------------------------------
 if __name__=='__main__':
     rospy.init_node('master')
 
@@ -136,6 +162,5 @@ if __name__=='__main__':
     sub_ctrl = rospy.Subscriber('joy', Joy, callback=joy_callback)
     #Sub aux valeurs d'angles
     sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
-
 
     rospy.spin()
