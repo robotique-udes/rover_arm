@@ -20,6 +20,7 @@ debounce_time = 4000 #for toggles in msec
 fine_speed = 100 #division of m/s ex: 100 = cm/s
 coarse_speed = 10 #division of m/s ex: 100 = cm/s
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
+nb_joint = 4 #Set le nombre de joint total du robot 
 
 #------------------------------------------------------------------------------------
 #Classes globales
@@ -30,15 +31,24 @@ class controller():
     y = 0
     lt = 0
     rt = 0
+
     coarse_toggle = 0
     coarse_mode = 0
+
+    joint_mode_toggle = 0
+    joint_mode = 0
+    joint_next = 0
+    joint_prev = 0
+    joint_current = 1
+    
+
 class ctrl_mouvement():
     x = 0
     z = 0
     y = 0
     
 controller_1 = controller()
-mem_controller_1 = controller()
+#mem_controller_1 = controller()
 v = ctrl_mouvement()
 
 #------------------------------------------------------------------------------------
@@ -137,22 +147,48 @@ def joy_callback(Joy: Joy):
     controller_1.b = Joy.buttons[3]
     controller_1.lt = Joy.buttons[4]
     controller_1.rt = Joy.buttons[5]
+
     controller_1.coarse_toggle = Joy.buttons[8]
+    controller_1.joint_mode_toggle = Joy.buttons[9]
+
+    controller_1.joint_prev = Joy.axes[6]
+    controller_1.joint_next = -Joy.axes[6]
+
+
     #rospy.loginfo('\n fine buttons pressed?: %d', controller_1.coarse_toggle)
     #controller_1.timestamp = Joy.header.stamp.nsecs/1000 #--> gets time between command for debouncing toggles in msec
+    
+    #--------------------------------------------------
+    #Change le joint actif pour le mode Joint
+    if controller_1.joint_next == 1:
+        if controller_1.joint_current < nb_joint:
+            controller_1.joint_current += 1
+        elif controller_1.joint_current == nb_joint:
+            controller_1.joint_current = 1
+    if controller_1.joint_prev == 1:
+        if controller_1.joint_current > 1:
+            controller_1.joint_current -= 1
+        elif controller_1.joint_current == 1:
+            controller_1.joint_current = nb_joint
+    #--------------------------------------------------
+    #Change le mode de vitesse (coarse/fine)
+    if controller_1.coarse_toggle:
 
+        if controller_1.coarse_mode == 1:
+            controller_1.coarse_mode = 0
+        elif controller_1.coarse_mode == 0:
+            controller_1.coarse_mode = 1
+    #--------------------------------------------------
+    ##Change le mode de jog (joint/xyz)
+    if controller_1.joint_mode_toggle:
 
-    if not mem_controller_1.coarse_toggle: #s'assure de recevoir un 0 zéro pour toggle (kinda debounce)
+        if controller_1.joint_mode == 1:
+            controller_1.joint_mode = 0
+        elif controller_1.joint_mode == 0:
+            controller_1.joint_mode = 1
 
-        if controller_1.coarse_toggle:
-
-            if controller_1.coarse_mode == 1:
-                controller_1.coarse_mode = 0
-
-            elif controller_1.coarse_mode == 0:
-                controller_1.coarse_mode = 1
-
-    mem_controller_1.coarse_toggle == controller_1.coarse_toggle
+    #mem_controller_1.coarse_toggle = controller_1.coarse_toggle
+    #mem_controller_1.joint_mode = controller_1.joint_mode
 
 
 def angle_callback(angle: angle):
@@ -160,23 +196,33 @@ def angle_callback(angle: angle):
     cmd = vitesse_moteur_msg()
 
 
-    #Calcul des vitesses moteurs et publier au topic   
-    bras = np.array([[angle_rad(angle.j1)],
-                     [angle_rad(angle.j2)],
-                     [angle_rad(angle.j3)],
-                     [angle_rad(angle.j4)]])
-    
-    axes() #transfere les inputs en cm/s
-    ctrl = np.array([[v.x],
-                     [v.y],
-                     [v.z],
-                     [0]])
-    cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+    if controller_1.joint_mode:
+        cmd.m1 = 1
+        cmd.m2 = 1
+        cmd.m3 = 1
+        cmd.m4 = 1
+
+
+    if not controller_1.joint_mode:
+        #Calcul des vitesses moteurs et publier au topic   
+        bras = np.array([[angle_rad(angle.j1)],
+                        [angle_rad(angle.j2)],
+                        [angle_rad(angle.j3)],
+                        [angle_rad(angle.j4)]])
+        
+        axes() #transfere les inputs en cm/s
+        ctrl = np.array([[v.x],
+                        [v.y],
+                        [v.z],
+                        [0]])
+        cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
 
     
     #Commenter pour ne plus recevoir de feedback dans la console
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
+    rospy.loginfo("Joint mode: %d \t\tSelected Joint: %d\n", controller_1.joint_mode, controller_1.joint_current)
+    rospy.loginfo("Coarse mode: %d\n", controller_1.coarse_mode)
     #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
     pub.publish(cmd)
