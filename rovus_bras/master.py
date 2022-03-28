@@ -30,16 +30,19 @@ class controller():
     y = 0
     lt = 0
     rt = 0
-    adjustment = 0
+    coarse_toggle = 0
+    coarse_mode = 0
 class ctrl_mouvement():
     x = 0
     z = 0
     y = 0
     
 controller_1 = controller()
+mem_controller_1 = controller()
 v = ctrl_mouvement()
-    
+
 #------------------------------------------------------------------------------------
+
 def calcul_vitesse(robot, axe):
     #angles initiaux
     angle1 = robot[0]
@@ -89,29 +92,40 @@ def angle_rad(deg):
     return rad
 
 def axes():
+    if not controller_1.coarse_mode:
+        v.x = (controller_1.y - controller_1.a)/(fine_speed)
+        v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
+        v.z = (controller_1.x - controller_1.b)/(fine_speed)
+    elif controller_1.coarse_mode:
+        v.x = (controller_1.y - controller_1.a)/(coarse_speed)
+        v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
+        v.z = (controller_1.x - controller_1.b)/(coarse_speed)
+       
+    
+    """
     if fine_coarse_toggle == 0:
-        if controller_1.adjustment == 0:
+        if controller_1.coarse_toggle == 0:
             v.x = (controller_1.y - controller_1.a)/(fine_speed)
             v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
             v.z = (controller_1.x - controller_1.b)/(fine_speed)
 
-        elif controller_1.adjustment == 1:
+        elif controller_1.coarse_toggle == 1:
             v.x = (controller_1.y - controller_1.a)/(coarse_speed)
             v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
             v.z = (controller_1.x - controller_1.b)/(coarse_speed)   
 
 
     if fine_coarse_toggle == 1:
-        if controller_1.adjustment == 1:
+        if controller_1.coarse_toggle == 1:
             v.x = (controller_1.y - controller_1.a)/(fine_speed)
             v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
             v.z = (controller_1.x - controller_1.b)/(fine_speed)
 
-        elif controller_1.adjustment == 0:
+        elif controller_1.coarse_toggle == 0:
             v.x = (controller_1.y - controller_1.a)/(coarse_speed)
             v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
             v.z = (controller_1.x - controller_1.b)/(coarse_speed)
-
+    """
 
 
 #------------------------------------------------------------------------------------
@@ -123,16 +137,30 @@ def joy_callback(Joy: Joy):
     controller_1.b = Joy.buttons[3]
     controller_1.lt = Joy.buttons[4]
     controller_1.rt = Joy.buttons[5]
-    controller_1.adjustment = Joy.buttons[8]
-    rospy.loginfo('\n fine buttons pressed?: %d', controller_1.adjustment)
+    controller_1.coarse_toggle = Joy.buttons[8]
+    #rospy.loginfo('\n fine buttons pressed?: %d', controller_1.coarse_toggle)
     #controller_1.timestamp = Joy.header.stamp.nsecs/1000 #--> gets time between command for debouncing toggles in msec
+
+
+    if not mem_controller_1.coarse_toggle: #s'assure de recevoir un 0 zéro pour toggle (kinda debounce)
+
+        if controller_1.coarse_toggle:
+
+            if controller_1.coarse_mode == 1:
+                controller_1.coarse_mode = 0
+
+            elif controller_1.coarse_mode == 0:
+                controller_1.coarse_mode = 1
+
+    mem_controller_1.coarse_toggle == controller_1.coarse_toggle
+
 
 def angle_callback(angle: angle):
     #Définir type de message
     cmd = vitesse_moteur_msg()
 
 
-#Calcul des vitesses moteurs et publier au topic   
+    #Calcul des vitesses moteurs et publier au topic   
     bras = np.array([[angle_rad(angle.j1)],
                      [angle_rad(angle.j2)],
                      [angle_rad(angle.j3)],
