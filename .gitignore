@@ -1,4 +1,2 @@
-
-.vscode/browse.vc.db
-
-.vscode/
+.vscode
+__pycache__

@@ -209,7 +209,3 @@ include
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-
-add_executable(slave src/slave.cpp)
-target_link_libraries(slave ${catkin_LIBRARIES})
