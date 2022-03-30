@@ -1,0 +1,8 @@
+<launch>
+
+    <!--Lancer la node de cinematiqe inverse-->
+    <node name="master" pkg="rovus_bras" type="master.py" />
+
+    <node name="salve" pkg="rovus_bras" type="slave" />
+
+</launch>
