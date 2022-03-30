@@ -17,8 +17,8 @@ from sensor_msgs.msg import Joy
 #Constantes et variables globales
 pi = 3.14159265359
 debounce_time = 4000 #for toggles in msec
-fine_speed = 100 #division of m/s ex: 100 = cm/s
-coarse_speed = 10 #division of m/s ex: 100 = cm/s
+fine_speed = 1 #division of m/s ex: 100 = cm/s
+coarse_speed = 0.1 #division of m/s ex: 100 = cm/s
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
 
@@ -95,11 +95,15 @@ def calcul_vitesse(robot, axe):
                   [a_1, a_2, a_3, a_4]])
 
     motorspeed = np.matmul(inv(j), axe)
-    return motorspeed[0], motorspeed[1], motorspeed[2], motorspeed[3]
+    return angle_deg(motorspeed[0]), angle_deg(motorspeed[1]), angle_deg(motorspeed[2]), angle_deg(motorspeed[3])
 
 def angle_rad(deg):
-    rad=180*deg/pi
+    rad=deg*pi/180
     return rad
+
+def angle_deg(rad):
+    deg=rad*180/pi
+    return deg
 
 def axes():
     if not controller_1.coarse_mode:
@@ -137,6 +141,34 @@ def axes():
             v.z = (controller_1.x - controller_1.b)/(coarse_speed)
     """
 
+def joint_mode():
+    m=np.zeros(4)
+    speed = 0
+
+    if not controller_1.lt and not controller_1.rt:
+        return m
+    
+    if controller_1.lt:
+        if controller_1.coarse_mode:
+            speed = -1/coarse_speed
+        if not controller_1.coarse_mode:
+            speed = -1/fine_speed
+
+    if controller_1.rt:
+        if controller_1.coarse_mode:
+            speed = 1/coarse_speed
+        if not controller_1.coarse_mode:
+            speed = 1/fine_speed
+
+    for i in range(0, nb_joint):
+        if i == controller_1.joint_current-1:
+            m[i] = speed
+
+    angle_deg(m[0])
+    angle_deg(m[1])
+    angle_deg(m[2])
+    angle_deg(m[3])
+    return m
 
 #------------------------------------------------------------------------------------
 def joy_callback(Joy: Joy):
@@ -187,20 +219,13 @@ def joy_callback(Joy: Joy):
         elif controller_1.joint_mode == 0:
             controller_1.joint_mode = 1
 
-    #mem_controller_1.coarse_toggle = controller_1.coarse_toggle
-    #mem_controller_1.joint_mode = controller_1.joint_mode
-
-
 def angle_callback(angle: angle):
     #Définir type de message
     cmd = vitesse_moteur_msg()
 
 
     if controller_1.joint_mode:
-        cmd.m1 = 1
-        cmd.m2 = 1
-        cmd.m3 = 1
-        cmd.m4 = 1
+        cmd.m1, cmd.m2, cmd.m3, cmd.m4 = joint_mode()
 
 
     if not controller_1.joint_mode:
@@ -221,9 +246,8 @@ def angle_callback(angle: angle):
     #Commenter pour ne plus recevoir de feedback dans la console
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
-    rospy.loginfo("Joint mode: %d \t\tSelected Joint: %d\n", controller_1.joint_mode, controller_1.joint_current)
-    rospy.loginfo("Coarse mode: %d\n", controller_1.coarse_mode)
-    #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
+    rospy.loginfo("Joint mode: %d \t\tSelected Joint: %d \t\tCoarse mode: %d", controller_1.joint_mode, controller_1.joint_current, controller_1.coarse_mode)
+    rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
     pub.publish(cmd)
 
