@@ -1,6 +1,11 @@
 <launch>
 
     <!--Lancer la node de cinematiqe inverse-->
+    <node name="joy" pkg="joy" type="joy_node" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+    </node>
+
+    <!--Lancer la node de cinematiqe inverse-->
     <node name="master" pkg="rovus_bras" type="master.py" />
 
     <!--Lancer la communication avec l'arduino-->
