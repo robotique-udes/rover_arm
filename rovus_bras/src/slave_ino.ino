@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 ros::NodeHandle n;
 
 class vitesse_angulaire
@@ -68,8 +67,8 @@ void loop()
     n.loginfo(m3); 
 
     rovus_bras::angle msg;
-    msg.j1 = vitesses_recu.m1;
-    msg.j2 = vitesses_recu.m2;
+    msg.j1 = 35;
+    msg.j2 = 40;
     msg.j3 = 45;
     msg.j4 = 50;
     pub.publish(&msg);

@@ -2,11 +2,36 @@
 //to launch : rosrun rosserial_python serial_node.py /dev/ttyUSB0
 //to echo : rostopic echo chatter                               ^check for correct usb port
 
+#define TIMER_INTERRUPT_DEBUG       0
+#define TIMERINTERRUPT_LOGLEVEL     0
+#define USE_TIMER_3     true
+#define USE_TIMER_4     true
+#define USE_TIMER_5     true
+
 #include <ros.h>
 #include <rovus_bras/vitesse_moteur_msg.h>
 #include <rovus_bras/angle.h>
 #include <stdio.h>
 #include <string.h>
+#include "TimerInterrupt.h"
+
+//------------------------------------------------------------------------------------------
+
+int DIR_1 = 40;
+int PUL_1 = 4;
+//int DIR_2 = 1;
+//int PUL_2 = 5;
+//int DIR_3 = 6;
+//int PUL_3 = 7;   
+
+bool PUL1_STATE = LOW;
+//bool PUL2_STATE = LOW;
+//bool PUL3_STATE = LOW;
+
+double Step_ctr = 0;
+void stepper1(float);
+//------------------------------------------------------------------------------------------
+inline void callback1();
 
 
 ros::NodeHandle n;
@@ -38,14 +63,18 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
     n.loginfo("\n\n");
     */
 
+   /*
    vitesses_recu.m1 = msg.m1;
    vitesses_recu.m2 = msg.m2;
    vitesses_recu.m3 = msg.m3;
    vitesses_recu.m4 = msg.m4;
+   */
 
-
-
-
+    float STEPS = 200.0;
+    float GearBoxRation = 100.0; 
+    float step_per_deg = STEPS*GearBoxRation/360.0;
+    float SPEED_STEP_SEC = msg.m3 * step_per_deg;
+    stepper1(SPEED_STEP_SEC);
 }
 
 //Creating Pub and Sub
@@ -61,20 +90,25 @@ void setup()
     n.advertise(pub);
     n.subscribe(sub);
 
-    pinMode(LED_BUILTIN, OUTPUT);
+//-------------------------------------------------------------
+    pinMode(DIR_1, OUTPUT);
+    pinMode(PUL_1, OUTPUT);
+    //pinMode(PUL_2, OUTPUT);
+    //pinMode(PUL_3, OUTPUT);
+
+    ITimer3.init();
+    //ITimer4.init();
+    //ITimer5.init();
+    //Serial.println("Setup");
 }
 
 void loop()
 {
     //Ecrire et Publier message --> Devrait être une fonction
-    char m1[8], m2[8], m3[8], m4[8];
-    dtostrf(vitesses_recu.m3,5,4,m3);
-    // n.loginfo(m3); 
 
-    
     rovus_bras::angle msg;
-    msg.j1 = vitesses_recu.m1;
-    msg.j2 = vitesses_recu.m2;
+    msg.j1 = 35;
+    msg.j2 = 40;
     msg.j3 = 45;
     msg.j4 = 50;
     pub.publish(&msg);
@@ -84,3 +118,32 @@ void loop()
 
 
 //-------------------------------------------------------------------------------
+inline void callback1()
+{
+  digitalWrite(PUL_1, PUL1_STATE);
+  PUL1_STATE = !PUL1_STATE;
+  Step_ctr++;
+  //Serial.println("callback");
+}
+
+void stepper1(float v1)
+{
+  //v1 = classe::vmot.m1
+
+    if (v1 != 0){
+
+        if (v1 > 0){
+        digitalWrite(DIR_1,HIGH);     
+        }
+        else{
+        digitalWrite(DIR_1,LOW);
+        }
+
+    ITimer3.attachInterrupt(abs(v1)*2, callback1 );
+    
+ 
+  }
+  else
+    ITimer3.detachInterrupt();
+
+}
