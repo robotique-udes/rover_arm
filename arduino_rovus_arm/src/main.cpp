@@ -122,7 +122,6 @@ inline void callback1()
 {
   digitalWrite(PUL_1, PUL1_STATE);
   PUL1_STATE = !PUL1_STATE;
-  Step_ctr++;
   //Serial.println("callback");
 }
 
