@@ -30,28 +30,21 @@ bool PUL1_STATE = LOW;
 
 double Step_ctr = 0;
 void stepper1(float);
-
-float m1_prev_micros = 0;
-float m2_prev_micros = 0;
-float m3_prev_micros = 0;
-float m4_prev_micros = 0;
-
-bool 
-
 //------------------------------------------------------------------------------------------
 inline void callback1();
 
 
 ros::NodeHandle n;
 
-class period_moteur
+class vitesse_angulaire
 {
     public:
         float m1;
         float m2;
         float m3;
         float m4;
-} period ;
+} vitesses_recu;
+
 
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
@@ -78,14 +71,10 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
    */
 
     float STEPS = 200.0;
-    float GearBoxRation = 100.0;
+    float GearBoxRation = 100.0; 
     float step_per_deg = STEPS*GearBoxRation/360.0;
-    float period.m3 = 1/ (abs(msg.m3)*step_per_deg);
-    
-    int dir_m3 = msg.m3;
-    int dir_m4 = msg.m4;    
-    int dir_m3 = msg.m3;
-    int dir_m4 = msg.m4;
+    float SPEED_STEP_SEC = msg.m3 * step_per_deg;
+    stepper1(SPEED_STEP_SEC);
 }
 
 //Creating Pub and Sub
@@ -115,13 +104,6 @@ void setup()
 
 void loop()
 {
-
-
-
-
-
-
-
     //Ecrire et Publier message --> Devrait être une fonction
 
     rovus_bras::angle msg;
@@ -136,16 +118,31 @@ void loop()
 
 
 //-------------------------------------------------------------------------------
+inline void callback1()
+{
+  digitalWrite(PUL_1, PUL1_STATE);
+  PUL1_STATE = !PUL1_STATE;
+  //Serial.println("callback");
+}
 
-void step_moteurs()
-{  
-    //Moteur #1
-    if (micros() - m1_prev_micros > period.m1)
-    {
-        
-        digitalWrite(PUL_1, HIGH);
-        digitalWrite(PUL_1, LOW);
-    }
+void stepper1(float v1)
+{
+  //v1 = classe::vmot.m1
 
+    if (v1 != 0){
+
+        if (v1 > 0){
+        digitalWrite(DIR_1,HIGH);     
+        }
+        else{
+        digitalWrite(DIR_1,LOW);
+        }
+
+    ITimer3.attachInterrupt(abs(v1)*2, callback1 );
+    
+ 
+  }
+  else
+    ITimer3.detachInterrupt();
 
 }
