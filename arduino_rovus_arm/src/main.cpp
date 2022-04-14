@@ -1,5 +1,5 @@
 //test ROS serial and arduino implementation
-//to launch : rosrun rosserial_python serial_node.py /dev/ttyUSB0
+//to launch : rosrun rosserial_python serial_node.py /dev/ttyACM0    or USB0
 //to echo : rostopic echo chatter                               ^check for correct usb port
 
 #define TIMER_INTERRUPT_DEBUG       0
@@ -31,10 +31,10 @@ bool PUL1_STATE = LOW;
 double Step_ctr = 0;
 void stepper1(float);
 
-float m1_prev_micros = 0;
-float m2_prev_micros = 0;
-float m3_prev_micros = 0;
-float m4_prev_micros = 0;
+unsigned long m1_prev_micros = 0;
+unsigned long m2_prev_micros = 0;
+unsigned long m3_prev_micros = 0;
+unsigned long m4_prev_micros = 0;
 
 int dir_m1 = 0;
 int dir_m2 = 0;    
@@ -46,13 +46,12 @@ void step_moteurs();
 
 ros::NodeHandle n;
 
-class period_moteur
+struct period_moteur
 {
-    public:
-        float m1;
-        float m2;
-        float m3;
-        float m4;
+    unsigned long m1;
+    unsigned long m2;
+    unsigned long m3;
+    unsigned long m4;
 } period;
 
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
@@ -81,14 +80,21 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
     float STEPS = 200.0;
     float GearBoxRation = 100.0;
     float step_per_deg = STEPS*GearBoxRation/360.0;
+    float temp;
 
     if (msg.m3 == 0)
     {
-        period.m3 = 0;
+        period.m3 = 2000000;
     }
     else
     {
-        period.m3 = 1/(abs(msg.m3)*step_per_deg);
+        temp = 1000000/(abs(msg.m3)*step_per_deg);
+        period.m3 = 1000000/(abs(msg.m3)*step_per_deg);
+
+        char period_m3_str[10];
+        ultoa(period.m3, period_m3_str,10);
+        n.loginfo(period_m3_str);
+
     }
     dir_m3 = msg.m3;
 }
@@ -131,6 +137,9 @@ void loop()
     msg.j4 = 50; 
     pub.publish(&msg);
     n.spinOnce();
+
+    //n.loginfo(char(period.m3));
+
     step_moteurs();
     
 }
@@ -151,7 +160,12 @@ void step_moteurs()
     }
 
     n.loginfo("o");
-    if ((micros() - m3_prev_micros > (period.m3*1000000)) && (period.m3 != 0))
+
+    // char period_m3_str[10];
+    // ultoa(period.m3, period_m3_str,10);
+    // n.loginfo(period_m3_str);
+
+    if ((micros() - m3_prev_micros > (period.m3))) //&& (period.m3 != 0)))
     {
         n.loginfo("i");
         digitalWrite(PUL_3, HIGH);
