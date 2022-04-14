@@ -17,8 +17,8 @@
 
 //------------------------------------------------------------------------------------------
 
-int DIR_1 = 40;
-int PUL_1 = 4;
+int DIR_3 = 40;
+int PUL_3 = 4;
 //int DIR_2 = 1;
 //int PUL_2 = 5;
 //int DIR_3 = 6;
@@ -36,11 +36,13 @@ float m2_prev_micros = 0;
 float m3_prev_micros = 0;
 float m4_prev_micros = 0;
 
-bool 
+int dir_m1 = 0;
+int dir_m2 = 0;    
+int dir_m3 = 0;
+int dir_m4 = 0;
 
 //------------------------------------------------------------------------------------------
-inline void callback1();
-
+void step_moteurs();
 
 ros::NodeHandle n;
 
@@ -51,7 +53,7 @@ class period_moteur
         float m2;
         float m3;
         float m4;
-} period ;
+} period;
 
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
@@ -69,23 +71,26 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
     n.loginfo(m4);
     n.loginfo("\n\n");
     */
-
    /*
    vitesses_recu.m1 = msg.m1;
    vitesses_recu.m2 = msg.m2;
    vitesses_recu.m3 = msg.m3;
    vitesses_recu.m4 = msg.m4;
    */
-
+  
     float STEPS = 200.0;
     float GearBoxRation = 100.0;
     float step_per_deg = STEPS*GearBoxRation/360.0;
-    float period.m3 = 1/ (abs(msg.m3)*step_per_deg);
-    
-    int dir_m3 = msg.m3;
-    int dir_m4 = msg.m4;    
-    int dir_m3 = msg.m3;
-    int dir_m4 = msg.m4;
+
+    if (msg.m3 == 0)
+    {
+        period.m3 = 0;
+    }
+    else
+    {
+        period.m3 = 1/(abs(msg.m3)*step_per_deg);
+    }
+    dir_m3 = msg.m3;
 }
 
 //Creating Pub and Sub
@@ -98,16 +103,18 @@ ros::Publisher pub("valeurAngles", &angle);
 void setup()
 {
     n.initNode();
+    // n.setSpinTimeout(10);
     n.advertise(pub);
     n.subscribe(sub);
+    m3_prev_micros = micros();
 
 //-------------------------------------------------------------
-    pinMode(DIR_1, OUTPUT);
-    pinMode(PUL_1, OUTPUT);
+    pinMode(DIR_3, OUTPUT);
+    pinMode(PUL_3, OUTPUT);
     //pinMode(PUL_2, OUTPUT);
     //pinMode(PUL_3, OUTPUT);
 
-    ITimer3.init();
+    // ITimer3.init();
     //ITimer4.init();
     //ITimer5.init();
     //Serial.println("Setup");
@@ -115,22 +122,16 @@ void setup()
 
 void loop()
 {
-
-
-
-
-
-
-
     //Ecrire et Publier message --> Devrait être une fonction
 
     rovus_bras::angle msg;
     msg.j1 = 35;
     msg.j2 = 40;
     msg.j3 = 45;
-    msg.j4 = 50;
+    msg.j4 = 50; 
     pub.publish(&msg);
     n.spinOnce();
+    step_moteurs();
     
 }
 
@@ -140,12 +141,22 @@ void loop()
 void step_moteurs()
 {  
     //Moteur #1
-    if (micros() - m1_prev_micros > period.m1)
+    if (dir_m3 >0)
     {
-        
-        digitalWrite(PUL_1, HIGH);
-        digitalWrite(PUL_1, LOW);
+        digitalWrite(DIR_3, HIGH);
+    }
+    else
+    {
+        digitalWrite(DIR_3, LOW);
     }
 
-
+    n.loginfo("o");
+    if ((micros() - m3_prev_micros > (period.m3*1000000)) && (period.m3 != 0))
+    {
+        n.loginfo("i");
+        digitalWrite(PUL_3, HIGH);
+        digitalWrite(PUL_3, LOW);
+        m3_prev_micros = micros();
+        //n.loginfo("Je suis dans un step");
+    }
 }

@@ -17,7 +17,7 @@ from sensor_msgs.msg import Joy
 #Constantes et variables globales
 pi = 3.14159265359
 debounce_time = 4000 #for toggles in msec
-fine_speed = 0.1 #division of m/s ex: 100 = cm/s
+fine_speed = 0.15 #division of m/s ex: 100 = cm/s
 coarse_speed = 0.1 #division of m/s ex: 100 = cm/s
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
@@ -262,3 +262,4 @@ if __name__=='__main__':
     sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
 
     rospy.spin()
+    
