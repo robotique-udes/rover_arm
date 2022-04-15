@@ -1,29 +1,43 @@
 //test ROS serial and arduino implementation
-//to launch : rosrun rosserial_python serial_node.py /dev/ttyACM0    or USB0
+//to launch : rosrun rosserial_python serial_node.py /dev/ttyACM0 or USB0
 //to echo : rostopic echo chatter                               ^check for correct usb port
 
 #include <ros.h>
 #include <rovus_bras/vitesse_moteur_msg.h>
 #include <rovus_bras/angle.h>
 
-
 //__________________________________________________________________________________________
 //Variables/constante globales :
 
-//Moteur1
-const int steps_m1 = 200;
-const float gearboxRatio_m1 = 100.0;
-const float stepPerDeg_m1 = steps_m1*gearboxRatio_m1/360;
+//J1
+const short DIR_M1 = 40;
+const short PUL_M1 = 4;
+const int STEPS_M1 = 200;
+const float GEARBOX_RATIO_M1 = 100.0;
+const float STEPS_PER_DEG_M1 = STEPS_M1*GEARBOX_RATIO_M1/360;
 
+//J2
+const short DIR_M2 = 1;
+const short PUL_M2 = 5;
+const int STEPS_M2 = 200;
+const float GEARBOX_RATIO_M2 = 100.0;
+const float STEPS_PER_DEG_M2 = STEPS_M2*GEARBOX_RATIO_M2/360;
 
-//Pins :
-int DIR_1 = 40;
-int PUL_1 = 4;
-int DIR_2 = 1;
-int PUL_2 = 5;
-int DIR_3 = 6;
-int PUL_3 = 7;   
+//J3
+const short DIR_M3 = 6;
+const short PUL_M3 = 6;
+const int STEPS_M3 = 200;
+const float GEARBOX_RATIO_M3 = 100.0;
+const float STEPS_PER_DEG_M3 = STEPS_M3*GEARBOX_RATIO_M3/360;
 
+//J4
+const short DIR_M4 = 7;
+const short PUL_M4 = 5;
+const int STEPS_M4 = 200;
+const float GEARBOX_RATIO_M4 = 100.0;
+const float STEPS_PER_DEG_M4 = STEPS_M3*GEARBOX_RATIO_M3/360;
+
+//Logic variables
 struct memoire_dernier_step
 {
     unsigned long m1 = 0;
@@ -51,22 +65,23 @@ struct direction_moteur
 
 } dir;
 
+unsigned long prev_spin_millis;
+
 
 //__________________________________________________________________________________________
 //Prototypes de fonctions :
 void callback(const rovus_bras::vitesse_moteur_msg &msg);
 void step_moteurs();
-
-
+unsigned long getPeriod(float msg, float step_per_deg);
+void DoStep(char nom_moteur[2], int dir, const int DIR_PIN, int PUL_PIN,
+            unsigned long *prev_micros, unsigned long period);
+            
 //__________________________________________________________________________________________
-//ROS "init" :
+//ROS "setup/init" :
 ros::NodeHandle n;
 ros::Subscriber<rovus_bras::vitesse_moteur_msg> sub("vitesses_moteur", callback);
 rovus_bras::angle angle;
 ros::Publisher pub("valeurAngles", &angle);
-
-
-
 
 //__________________________________________________________________________________________
 
@@ -78,34 +93,40 @@ void setup()
     n.advertise(pub);
     n.subscribe(sub);
 
-//-------------------------------------------------------------
-    pinMode(DIR_3, OUTPUT);
-    pinMode(PUL_3, OUTPUT);
-    //pinMode(PUL_2, OUTPUT);
-    //pinMode(PUL_3, OUTPUT);
+    //______________________________________________________________________________________
+    //Set pinMode
+    pinMode(DIR_M1, OUTPUT);
+    pinMode(PUL_M1, OUTPUT);
 
-    // ITimer3.init();
-    //ITimer4.init();
-    //ITimer5.init();
-    //Serial.println("Setup");
+    pinMode(DIR_M2, OUTPUT);
+    pinMode(PUL_M2, OUTPUT);
+    
+    pinMode(DIR_M3, OUTPUT);
+    pinMode(PUL_M3, OUTPUT);    
+    
+    pinMode(DIR_M4, OUTPUT);
+    pinMode(PUL_M4, OUTPUT);
 }
 
 void loop()
 {
     //Ecrire et Publier message --> Devrait être une fonction
 
-    rovus_bras::angle msg;
-    msg.j1 = 35;
-    msg.j2 = 40;
-    msg.j3 = 45;
-    msg.j4 = 50; 
-    pub.publish(&msg);
-    n.spinOnce();
+    //Timer pour les messages (si trop rapide un delay exponentiel se cree)
+    if (millis() - prev_spin_millis > 10)
+    {
+        rovus_bras::angle msg;
+        msg.j1 = 35;
+        msg.j2 = 40;
+        msg.j3 = 45;
+        msg.j4 = 50; 
+        pub.publish(&msg);
 
-    //n.loginfo(char(period.m3));
+        n.spinOnce();
+        prev_spin_millis = millis();
+    }
 
     step_moteurs();
-    
 }
 
 
@@ -127,44 +148,59 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
             n.loginfo("\n\n");
             */
 
-
-    if (msg.m3 == 0)
-    {
-        period.m3 = 0;
-    }
-    else
-    {
-        period.m3 = 1000000/(abs(msg.m3)*stepPerDeg_m1);
-    }
-    dir.m3 = msg.m3;
+    period.m1 = getPeriod(msg.m1, STEPS_PER_DEG_M1);
+    period.m2 = getPeriod(msg.m2, STEPS_PER_DEG_M2);           
+    period.m3 = getPeriod(msg.m3, STEPS_PER_DEG_M3);
+    period.m4 = getPeriod(msg.m4, STEPS_PER_DEG_M4);
 }
 
 void step_moteurs()
-{  
-    //Moteur #1
-        if (dir.m3 > 0)
-        {
-            digitalWrite(DIR_3, HIGH);
-        }
-        else
-        {
-            digitalWrite(DIR_3, LOW);
-        }
-
-        
-        char str[10];
-        ultoa(period.m3, str, 10);
-        n.loginfo(str);
-        n.loginfo("o");
-        
-        
+{    
     
-        if ((micros() - prev_micros.m3 > (period.m3)) && (period.m3 != 0))
-        {
-            n.loginfo("i");
+    DoStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1);
+    DoStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2);
+    DoStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3);
+    DoStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4);
 
-            digitalWrite(PUL_3, HIGH);
-            digitalWrite(PUL_3, LOW);
-            prev_micros.m3 = micros();
-        }
+}   
+
+unsigned long getPeriod(float msg, float step_per_deg)
+{
+    unsigned long period = 0;
+
+    if (msg == 0)
+        period = 0;
+    else
+        period = 1000000/(abs(msg)*STEPS_PER_DEG_M3);
+
+    return period;
 }
+
+void DoStep(char nom_moteur[2], int dir, const int DIR_PIN, int PUL_PIN,
+            unsigned long *prev_micros, unsigned long period)
+{
+    if (dir > 0)
+        digitalWrite(DIR_PIN, HIGH);
+    else
+        digitalWrite(DIR_PIN, LOW);
+
+    if ((micros() - *prev_micros > (period)) && (period != 0))
+    {
+        n.loginfo(nom_moteur);
+
+        digitalWrite(PUL_M3, HIGH);
+        digitalWrite(PUL_M3, LOW);
+        *prev_micros = micros();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+

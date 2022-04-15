@@ -17,8 +17,8 @@ from sensor_msgs.msg import Joy
 #Constantes et variables globales
 pi = 3.14159265359
 debounce_time = 4000 #for toggles in msec
-fine_speed = 0.15 #division of m/s ex: 100 = cm/s
-coarse_speed = 0.1 #division of m/s ex: 100 = cm/s
+fine_speed = 10 #division of m/s ex: 100 = cm/s
+coarse_speed = 1 #division of m/s ex: 100 = cm/s
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
 
@@ -150,15 +150,15 @@ def joint_mode():
     
     if controller_1.lt:
         if controller_1.coarse_mode:
-            speed = -1/coarse_speed
+            speed = -10/coarse_speed
         if not controller_1.coarse_mode:
-            speed = -1/fine_speed
+            speed = -10/fine_speed
 
     if controller_1.rt:
         if controller_1.coarse_mode:
-            speed = 1/coarse_speed
+            speed = 10/coarse_speed
         if not controller_1.coarse_mode:
-            speed = 1/fine_speed
+            speed = 10/fine_speed
 
     for i in range(0, nb_joint):
         if i == controller_1.joint_current-1:
