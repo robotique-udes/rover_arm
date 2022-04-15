@@ -7,33 +7,47 @@
 #include <rovus_bras/angle.h>
 
 //__________________________________________________________________________________________
+//Prototypes de fonctions :
+void callback(const rovus_bras::vitesse_moteur_msg &msg);
+void step_moteurs();
+unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir);
+void DoStep(char nom_moteur[2], bool dir, const int DIR_PIN, int PUL_PIN,
+            unsigned long *prev_micros, unsigned long period, int *curr_step);
+bool getDir(float msg);
+
+
+//__________________________________________________________________________________________
 //Variables/constante globales :
+
+//callback timer's var
+const int CLOCK_CALLBACK = 10; //En millisecondes
+unsigned long prev_millis_Callback;
 
 //J1
 const short DIR_M1 = 40;
 const short PUL_M1 = 4;
-const int STEPS_M1 = 200;
+const int   STEPS_M1 = 200;
 const float GEARBOX_RATIO_M1 = 100.0;
 const float STEPS_PER_DEG_M1 = STEPS_M1*GEARBOX_RATIO_M1/360;
 
 //J2
 const short DIR_M2 = 1;
 const short PUL_M2 = 5;
-const int STEPS_M2 = 200;
+const int   STEPS_M2 = 200;
 const float GEARBOX_RATIO_M2 = 100.0;
 const float STEPS_PER_DEG_M2 = STEPS_M2*GEARBOX_RATIO_M2/360;
 
 //J3
 const short DIR_M3 = 6;
 const short PUL_M3 = 6;
-const int STEPS_M3 = 200;
+const int   STEPS_M3 = 200;
 const float GEARBOX_RATIO_M3 = 100.0;
 const float STEPS_PER_DEG_M3 = STEPS_M3*GEARBOX_RATIO_M3/360;
 
 //J4
 const short DIR_M4 = 7;
 const short PUL_M4 = 5;
-const int STEPS_M4 = 200;
+const int   STEPS_M4 = 200;
 const float GEARBOX_RATIO_M4 = 100.0;
 const float STEPS_PER_DEG_M4 = STEPS_M3*GEARBOX_RATIO_M3/360;
 
@@ -58,23 +72,21 @@ struct period_moteur
 
 struct direction_moteur
 {
+    bool m1 = 0;
+    bool m2 = 0;
+    bool m3 = 0;
+    bool m4 = 0;
+
+} dir;
+
+struct current_step
+{
     int m1 = 0;
     int m2 = 0;
     int m3 = 0;
     int m4 = 0;
-
-} dir;
-
-unsigned long prev_spin_millis;
-
-
-//__________________________________________________________________________________________
-//Prototypes de fonctions :
-void callback(const rovus_bras::vitesse_moteur_msg &msg);
-void step_moteurs();
-unsigned long getPeriod(float msg, float step_per_deg);
-void DoStep(char nom_moteur[2], int dir, const int DIR_PIN, int PUL_PIN,
-            unsigned long *prev_micros, unsigned long period);
+    
+} curr_step;
             
 //__________________________________________________________________________________________
 //ROS "setup/init" :
@@ -113,7 +125,7 @@ void loop()
     //Ecrire et Publier message --> Devrait être une fonction
 
     //Timer pour les messages (si trop rapide un delay exponentiel se cree)
-    if (millis() - prev_spin_millis > 10)
+    if (millis() - prev_millis_Callback > CLOCK_CALLBACK)
     {
         rovus_bras::angle msg;
         msg.j1 = 35;
@@ -121,9 +133,9 @@ void loop()
         msg.j3 = 45;
         msg.j4 = 50; 
         pub.publish(&msg);
-
         n.spinOnce();
-        prev_spin_millis = millis();
+
+        prev_millis_Callback = millis();
     }
 
     step_moteurs();
@@ -148,25 +160,27 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
             n.loginfo("\n\n");
             */
 
-    period.m1 = getPeriod(msg.m1, STEPS_PER_DEG_M1);
-    period.m2 = getPeriod(msg.m2, STEPS_PER_DEG_M2);           
-    period.m3 = getPeriod(msg.m3, STEPS_PER_DEG_M3);
-    period.m4 = getPeriod(msg.m4, STEPS_PER_DEG_M4);
+    period.m1 = getPeriodAndDir(msg.m1, STEPS_PER_DEG_M1, &dir.m1);
+    period.m2 = getPeriodAndDir(msg.m2, STEPS_PER_DEG_M2, &dir.m2);
+    period.m3 = getPeriodAndDir(msg.m3, STEPS_PER_DEG_M3, &dir.m3);
+    period.m4 = getPeriodAndDir(msg.m4, STEPS_PER_DEG_M4, &dir.m4);
 }
 
 void step_moteurs()
 {    
     
-    DoStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1);
-    DoStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2);
-    DoStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3);
-    DoStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4);
+    DoStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1, &curr_step.m1);
+    DoStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2, &curr_step.m2);
+    DoStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3, &curr_step.m3);
+    DoStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4, &curr_step.m4);
 
 }   
 
-unsigned long getPeriod(float msg, float step_per_deg)
+unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir)
 {
     unsigned long period = 0;
+
+    *dir = getDir(msg);
 
     if (msg == 0)
         period = 0;
@@ -176,10 +190,20 @@ unsigned long getPeriod(float msg, float step_per_deg)
     return period;
 }
 
-void DoStep(char nom_moteur[2], int dir, const int DIR_PIN, int PUL_PIN,
-            unsigned long *prev_micros, unsigned long period)
+bool getDir(float msg)
 {
-    if (dir > 0)
+    bool dir = 0;
+
+    if (msg > 0)
+        dir = 1;
+
+    return dir;
+}
+
+void DoStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
+            unsigned long *prev_micros, unsigned long period, int *curr_step)
+{
+    if (dir)
         digitalWrite(DIR_PIN, HIGH);
     else
         digitalWrite(DIR_PIN, LOW);
@@ -188,9 +212,14 @@ void DoStep(char nom_moteur[2], int dir, const int DIR_PIN, int PUL_PIN,
     {
         n.loginfo(nom_moteur);
 
+        if (dir)
+            *curr_step += 1;
+        else
+            *curr_step -= 1;
+        
+        *prev_micros = micros();
         digitalWrite(PUL_M3, HIGH);
         digitalWrite(PUL_M3, LOW);
-        *prev_micros = micros();
     }
 }
 
