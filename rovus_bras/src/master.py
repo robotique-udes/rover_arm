@@ -16,7 +16,7 @@ from sensor_msgs.msg import Joy
 #------------------------------------------------------------------------------------
 #Constantes et variables globales
 pi = 3.14159265359
-debounce_time = 4000 #for toggles in msec
+debounce_time = 400 #for toggles in msec
 fine_speed = 10 #division of m/s ex: 100 = cm/s
 coarse_speed = 1 #division of m/s ex: 100 = cm/s
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
@@ -90,9 +90,9 @@ def calcul_vitesse(robot, axe):
 
 
     j = np.array([[x_1, x_2, x_3, x_4],
-                  [y_1, y_2, y_3, y_4],
-                  [z_1, z_2, z_3, z_4],
-                  [a_1, a_2, a_3, a_4]])
+                [y_1, y_2, y_3, y_4],
+                [z_1, z_2, z_3, z_4],
+                [a_1, a_2, a_3, a_4]])
 
     motorspeed = np.matmul(inv(j), axe)
     return angle_deg(motorspeed[0]), angle_deg(motorspeed[1]), angle_deg(motorspeed[2]), angle_deg(motorspeed[3])
@@ -114,32 +114,6 @@ def axes():
         v.x = (controller_1.y - controller_1.a)/(coarse_speed)
         v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
         v.z = (controller_1.x - controller_1.b)/(coarse_speed)
-       
-    
-    """
-    if fine_coarse_toggle == 0:
-        if controller_1.coarse_toggle == 0:
-            v.x = (controller_1.y - controller_1.a)/(fine_speed)
-            v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
-            v.z = (controller_1.x - controller_1.b)/(fine_speed)
-
-        elif controller_1.coarse_toggle == 1:
-            v.x = (controller_1.y - controller_1.a)/(coarse_speed)
-            v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
-            v.z = (controller_1.x - controller_1.b)/(coarse_speed)   
-
-
-    if fine_coarse_toggle == 1:
-        if controller_1.coarse_toggle == 1:
-            v.x = (controller_1.y - controller_1.a)/(fine_speed)
-            v.y = (controller_1.rt - controller_1.lt)/(fine_speed)
-            v.z = (controller_1.x - controller_1.b)/(fine_speed)
-
-        elif controller_1.coarse_toggle == 0:
-            v.x = (controller_1.y - controller_1.a)/(coarse_speed)
-            v.y = (controller_1.rt - controller_1.lt)/(coarse_speed)
-            v.z = (controller_1.x - controller_1.b)/(coarse_speed)
-    """
 
 def joint_mode():
     m=np.zeros(4)
@@ -240,13 +214,17 @@ def angle_callback(angle: angle):
                         [v.y],
                         [v.z],
                         [0]])
-        cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+        try:
+            cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+        
+        except Exception:
+            rospy.logerr("Matrice singuliaire --> Jogger en joints")
 
     
     #Commenter pour ne plus recevoir de feedback dans la console
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
-    rospy.loginfo("Joint mode: %d \t\tSelected Joint: %d \t\tCoarse mode: %d", controller_1.joint_mode, controller_1.joint_current, controller_1.coarse_mode)
+    rospy.logwarn("Joint mode: %d \t\tSelected Joint: %d \t\tCoarse mode: %d", controller_1.joint_mode, controller_1.joint_current, controller_1.coarse_mode)
     rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4)
 
     pub.publish(cmd)

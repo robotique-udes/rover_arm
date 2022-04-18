@@ -11,9 +11,10 @@
 void callback(const rovus_bras::vitesse_moteur_msg &msg);
 void step_moteurs();
 unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir);
-void DoStep(char nom_moteur[2], bool dir, const int DIR_PIN, int PUL_PIN,
+void doStep(char nom_moteur[2], bool dir, const int DIR_PIN, int PUL_PIN,
             unsigned long *prev_micros, unsigned long period, int *curr_step);
 bool getDir(float msg);
+int getAngle(int numero_joint);
 
 
 //__________________________________________________________________________________________
@@ -128,10 +129,10 @@ void loop()
     if (millis() - prev_millis_Callback > CLOCK_CALLBACK)
     {
         rovus_bras::angle msg;
-        msg.j1 = 35;
-        msg.j2 = 40;
-        msg.j3 = 45;
-        msg.j4 = 50; 
+        msg.j1 = getAngle(1);
+        msg.j2 = getAngle(2);
+        msg.j3 = getAngle(3);
+        msg.j4 = getAngle(4); 
         pub.publish(&msg);
         n.spinOnce();
 
@@ -168,12 +169,10 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
 
 void step_moteurs()
 {    
-    
-    DoStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1, &curr_step.m1);
-    DoStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2, &curr_step.m2);
-    DoStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3, &curr_step.m3);
-    DoStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4, &curr_step.m4);
-
+    doStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1, &curr_step.m1);
+    doStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2, &curr_step.m2);
+    doStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3, &curr_step.m3);
+    doStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4, &curr_step.m4);
 }   
 
 unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir)
@@ -200,7 +199,7 @@ bool getDir(float msg)
     return dir;
 }
 
-void DoStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
+void doStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
             unsigned long *prev_micros, unsigned long period, int *curr_step)
 {
     if (dir)
@@ -210,8 +209,6 @@ void DoStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
 
     if ((micros() - *prev_micros > (period)) && (period != 0))
     {
-        n.loginfo(nom_moteur);
-
         if (dir)
             *curr_step += 1;
         else
@@ -223,9 +220,28 @@ void DoStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
     }
 }
 
+int getAngle(int numero_joint)
+{
+    int angle = 0;
 
+    switch (numero_joint)
+    {
+        case 1:
+            angle = curr_step.m1/STEPS_PER_DEG_M1;
+            break;
+        case 2:
+            angle = curr_step.m2/STEPS_PER_DEG_M2;
+            break;
+        case 3:
+            angle = curr_step.m3/STEPS_PER_DEG_M3;
+            break;
+        case 4:
+            angle = curr_step.m4/STEPS_PER_DEG_M4;
+            break;
+    }
 
-
+    return angle;
+}
 
 
 
