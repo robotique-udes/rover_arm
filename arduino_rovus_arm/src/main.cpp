@@ -10,12 +10,10 @@
 //Prototypes de fonctions :
 void callback(const rovus_bras::vitesse_moteur_msg &msg);
 void step_moteurs();
-unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir);
-void doStep(char nom_moteur[2], bool dir, const int DIR_PIN, int PUL_PIN,
-            unsigned long *prev_micros, unsigned long period, int *curr_step);
-bool getDir(float msg);
-int getAngle(int numero_joint);
-
+void getPeriod(float msg, class moteur *m);
+void getDir(float msg, class moteur *m);
+void doStep(class moteur *m);
+int getAngle(class moteur *m);
 
 //__________________________________________________________________________________________
 //Variables/constante globales :
@@ -24,71 +22,43 @@ int getAngle(int numero_joint);
 const int CLOCK_CALLBACK = 10; //En millisecondes
 unsigned long prev_millis_Callback;
 
+//Creer les moteurs/joints
+class moteur 
+{
+  public:
+        short DIR;
+        short PUL;
+        short STEPS_REV;
+        short GEARBOX;
+        float STEPS_DEG;
+
+        unsigned long prev_micros = 0;
+        unsigned long period = 0;
+        bool dir = 1;
+        short curr_step = 0;
+        short angle = 0;
+
+    moteur(short w, short x, short y, short z)
+    {
+        DIR = w;
+        PUL = x;
+        STEPS_REV = y;
+        GEARBOX = z;
+
+        STEPS_DEG = STEPS_REV*GEARBOX/360;
+
+        pinMode(DIR, OUTPUT);
+        pinMode(PUL, OUTPUT);
+    }
+};
+
 //J1
-const short DIR_M1 = 40;
-const short PUL_M1 = 4;
-const int   STEPS_M1 = 200;
-const float GEARBOX_RATIO_M1 = 100.0;
-const float STEPS_PER_DEG_M1 = STEPS_M1*GEARBOX_RATIO_M1/360;
+moteur m1(40, 4, 200, 100);
+moteur m2(1, 5, 200, 100);
+moteur m3(6, 7, 200, 100);
+moteur m4(8, 9, 200, 100);
 
-//J2
-const short DIR_M2 = 1;
-const short PUL_M2 = 5;
-const int   STEPS_M2 = 200;
-const float GEARBOX_RATIO_M2 = 100.0;
-const float STEPS_PER_DEG_M2 = STEPS_M2*GEARBOX_RATIO_M2/360;
 
-//J3
-const short DIR_M3 = 6;
-const short PUL_M3 = 6;
-const int   STEPS_M3 = 200;
-const float GEARBOX_RATIO_M3 = 100.0;
-const float STEPS_PER_DEG_M3 = STEPS_M3*GEARBOX_RATIO_M3/360;
-
-//J4
-const short DIR_M4 = 7;
-const short PUL_M4 = 5;
-const int   STEPS_M4 = 200;
-const float GEARBOX_RATIO_M4 = 100.0;
-const float STEPS_PER_DEG_M4 = STEPS_M3*GEARBOX_RATIO_M3/360;
-
-//Logic variables
-struct memoire_dernier_step
-{
-    unsigned long m1 = 0;
-    unsigned long m2 = 0;
-    unsigned long m3 = 0;
-    unsigned long m4 = 0;
-
-} prev_micros;
-
-struct period_moteur
-{
-    unsigned long m1 = 0;
-    unsigned long m2 = 0;
-    unsigned long m3 = 0;
-    unsigned long m4 = 0;
-
-} period;
-
-struct direction_moteur
-{
-    bool m1 = 0;
-    bool m2 = 0;
-    bool m3 = 0;
-    bool m4 = 0;
-
-} dir;
-
-struct current_step
-{
-    int m1 = 0;
-    int m2 = 0;
-    int m3 = 0;
-    int m4 = 0;
-    
-} curr_step;
-            
 //__________________________________________________________________________________________
 //ROS "setup/init" :
 ros::NodeHandle n;
@@ -105,20 +75,6 @@ void setup()
     n.initNode();
     n.advertise(pub);
     n.subscribe(sub);
-
-    //______________________________________________________________________________________
-    //Set pinMode
-    pinMode(DIR_M1, OUTPUT);
-    pinMode(PUL_M1, OUTPUT);
-
-    pinMode(DIR_M2, OUTPUT);
-    pinMode(PUL_M2, OUTPUT);
-    
-    pinMode(DIR_M3, OUTPUT);
-    pinMode(PUL_M3, OUTPUT);    
-    
-    pinMode(DIR_M4, OUTPUT);
-    pinMode(PUL_M4, OUTPUT);
 }
 
 void loop()
@@ -129,10 +85,10 @@ void loop()
     if (millis() - prev_millis_Callback > CLOCK_CALLBACK)
     {
         rovus_bras::angle msg;
-        msg.j1 = getAngle(1);
-        msg.j2 = getAngle(2);
-        msg.j3 = getAngle(3);
-        msg.j4 = getAngle(4); 
+        msg.j1 = getAngle(&m1);
+        msg.j2 = getAngle(&m2);
+        msg.j3 = getAngle(&m3);
+        msg.j4 = getAngle(&m4); 
         pub.publish(&msg);
         n.spinOnce();
 
@@ -141,6 +97,7 @@ void loop()
 
     step_moteurs();
 }
+
 
 
 //__________________________________________________________________________________________
@@ -161,91 +118,64 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
             n.loginfo("\n\n");
             */
 
-    period.m1 = getPeriodAndDir(msg.m1, STEPS_PER_DEG_M1, &dir.m1);
-    period.m2 = getPeriodAndDir(msg.m2, STEPS_PER_DEG_M2, &dir.m2);
-    period.m3 = getPeriodAndDir(msg.m3, STEPS_PER_DEG_M3, &dir.m3);
-    period.m4 = getPeriodAndDir(msg.m4, STEPS_PER_DEG_M4, &dir.m4);
+    getPeriod(msg.m1, &m1);
+    getDir(msg.m1, &m1);
+
+    getPeriod(msg.m2, &m2);
+    getDir(msg.m2, &m2);
+
+    getPeriod(msg.m3, &m3);
+    getDir(msg.m3, &m3);
+
+    getPeriod(msg.m4, &m4);
+    getDir(msg.m4, &m4);
 }
 
 void step_moteurs()
 {    
-    doStep("m1", dir.m1, DIR_M1, PUL_M1, &prev_micros.m1, period.m1, &curr_step.m1);
-    doStep("m2", dir.m2, DIR_M2, PUL_M2, &prev_micros.m2, period.m2, &curr_step.m2);
-    doStep("m3", dir.m3, DIR_M3, PUL_M3, &prev_micros.m3, period.m3, &curr_step.m3);
-    doStep("m4", dir.m4, DIR_M4, PUL_M4, &prev_micros.m4, period.m4, &curr_step.m4);
+    doStep(&m1);
+    doStep(&m2);
+    doStep(&m3);
+    doStep(&m4);
 }   
 
-unsigned long getPeriodAndDir(float msg, float step_per_deg, bool *dir)
+void getPeriod(float msg, class moteur *m)
 {
-    unsigned long period = 0;
-
-    *dir = getDir(msg);
-
     if (msg == 0)
-        period = 0;
+        m->period = 0;
     else
-        period = 1000000/(abs(msg)*STEPS_PER_DEG_M3);
-
-    return period;
+        m->period = 1000000/(abs(msg)*m->STEPS_DEG);
 }
 
-bool getDir(float msg)
+void getDir(float msg, class moteur *m)
 {
-    bool dir = 0;
-
     if (msg > 0)
-        dir = 1;
-
-    return dir;
-}
-
-void doStep(char nom_moteur[3], bool dir, const int DIR_PIN, int PUL_PIN,
-            unsigned long *prev_micros, unsigned long period, int *curr_step)
-{
-    if (dir)
-        digitalWrite(DIR_PIN, HIGH);
+        m->dir = 1;
     else
-        digitalWrite(DIR_PIN, LOW);
-
-    if ((micros() - *prev_micros > (period)) && (period != 0))
-    {
-        if (dir)
-            *curr_step += 1;
-        else
-            *curr_step -= 1;
-        
-        *prev_micros = micros();
-        digitalWrite(PUL_M3, HIGH);
-        digitalWrite(PUL_M3, LOW);
-    }
+        m->dir = 0;
 }
 
-int getAngle(int numero_joint)
+void doStep(class moteur *m)
 {
-    int angle = 0;
+    if (m->dir)
+        digitalWrite(m->DIR, HIGH);
+    else
+        digitalWrite(m->DIR, LOW);
 
-    switch (numero_joint)
+    if ((micros() - m->prev_micros > (m->period)) && (m->period != 0))
     {
-        case 1:
-            angle = curr_step.m1/STEPS_PER_DEG_M1;
-            break;
-        case 2:
-            angle = curr_step.m2/STEPS_PER_DEG_M2;
-            break;
-        case 3:
-            angle = curr_step.m3/STEPS_PER_DEG_M3;
-            break;
-        case 4:
-            angle = curr_step.m4/STEPS_PER_DEG_M4;
-            break;
-    }
-
-    return angle;
+        if (m->dir)
+            m->curr_step += 1;
+        else
+            m->curr_step -= 1;
+        
+        m->prev_micros = micros();
+        digitalWrite(m->PUL, HIGH);
+        digitalWrite(m->PUL, LOW);
+    }    
 }
 
-
-
-
-
-
-
+int getAngle(class moteur *m)
+{
+    return (m->curr_step/m->STEPS_DEG);
+}
