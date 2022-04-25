@@ -1,4 +1,4 @@
-int8 j1
-int8 j2
-int8 j3
-int8 j4
+float32 j1
+float32 j2
+float32 j3
+float32 j4

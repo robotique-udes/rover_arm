@@ -13,7 +13,7 @@ void step_moteurs();
 void getPeriod(float msg, class moteur *m);
 void getDir(float msg, class moteur *m);
 void doStep(class moteur *m);
-int getAngle(class moteur *m);
+float getAngle(class moteur *m);
 
 //__________________________________________________________________________________________
 //Variables/constante globales :
@@ -63,6 +63,10 @@ moteur m4(8, 9, 200, 100);
 //ROS "setup/init" :
 ros::NodeHandle n;
 ros::Subscriber<rovus_bras::vitesse_moteur_msg> sub("vitesses_moteur", callback);
+
+//rovus_bras::angle angle;
+//ros::Publisher pub("valeurAngles", &angle);
+
 rovus_bras::angle angle;
 ros::Publisher pub("valeurAngles", &angle);
 
@@ -175,7 +179,7 @@ void doStep(class moteur *m)
     }    
 }
 
-int getAngle(class moteur *m)
+float getAngle(class moteur *m)
 {
     return (m->curr_step/m->STEPS_DEG);
 }
