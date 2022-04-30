@@ -11,7 +11,9 @@ import math as m
 import rospy
 from rovus_bras.msg import vitesse_moteur_msg
 from rovus_bras.msg import angle
+from rovus_bras.msg import feedback
 from sensor_msgs.msg import Joy
+
 
 #------------------------------------------------------------------------------------
 #Constantes et variables globales
@@ -41,7 +43,6 @@ class controller():
     speed_multiplier = 0.1
     speed_increase = 0
     
-
 class ctrl_mouvement():
     x = 0
     z = 0
@@ -181,12 +182,10 @@ def joy_callback(Joy: Joy):
     if controller_1.speed_increase < 0:
         controller_1.speed_multiplier-=speed_increment
 
-    
-
-
 def angle_callback(angle: angle):
     #Définir type de message
     cmd = vitesse_moteur_msg()
+    fdbk = feedback()
 
 
     if controller_1.joint_mode:
@@ -207,25 +206,49 @@ def angle_callback(angle: angle):
                         [0]])
         try:
             cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+            fdbk.singular_matrix = 0
         
         except Exception:
-            rospy.logerr("Matrice singuliaire --> Jogger en joints")
+            fdbk.singular_matrix = 1
+     #       rospy.logerr("Matrice singuliaire --> Jogger en joints")
 
     
     #Commenter pour ne plus recevoir de feedback dans la console
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
 
-    rospy.logwarn("Joint mode: %d \t\tSelected Joint: %d", controller_1.joint_mode, controller_1.joint_current)
-    rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\nSpeed Multiplier : %f\n\n\n\n\n\n\n\n\n\n\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4, controller_1.speed_multiplier)
+    #rospy.logwarn("Joint mode: %d \t\tSelected Joint: %d", controller_1.joint_mode, controller_1.joint_current)
+    #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\nSpeed Multiplier : %f\n\n\n\n\n\n\n\n\n\n\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4, controller_1.speed_multiplier)
 
     pub.publish(cmd)
+
+    #Build feedback message
+    fdbk.j1 = angle.j1
+    fdbk.j2 = angle.j2
+    fdbk.j3 = angle.j3
+    fdbk.j4 = angle.j4
+
+    fdbk.m1 = cmd.m1
+    fdbk.m2 = cmd.m2
+    fdbk.m3 = cmd.m3
+    fdbk.m4 = cmd.m4
+
+    fdbk.ctrl_mode = controller_1.joint_mode
+    fdbk.current_joint = controller_1.joint_current
+    fdbk.speed_multiplier = controller_1.speed_multiplier
+
+    pub_feedback.publish(fdbk)
+
+
 
 #------------------------------------------------------------------------------------
 if __name__=='__main__':
     rospy.init_node('master')
 
     pub = rospy.Publisher('vitesses_moteur', vitesse_moteur_msg, queue_size=10)
+
+    pub_feedback = rospy.Publisher('rovus_bras_feedback', feedback, queue_size=None)
+
     #Sub au controlleur
     sub_ctrl = rospy.Subscriber('joy', Joy, callback=joy_callback)
     #Sub aux valeurs d'angles

@@ -1,6 +1,6 @@
 <launch>
 
-    <!--Lancer la node de cinematiqe inverse-->
+    <!--Lancer la node du controller-->
     <node name="joy" pkg="joy" type="joy_node" >
         <param name="dev" type="string" value="/dev/input/js0" />
     </node>
@@ -10,7 +10,7 @@
 
     <!--Lancer la communication avec l'arduino-->
     <node name="arduino" pkg="rosserial_python" type="serial_node.py">
-    <param name="port" value="/dev/ttyACM0"/>
+        <param name="port" value="/dev/ttyUSB0"/>
     </node>
 
 </launch>
