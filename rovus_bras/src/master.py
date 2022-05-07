@@ -23,6 +23,7 @@ fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
 speed_increment = 0.1 #en deg/s
 speed_base = 10 #en deg/s
+vitesse_maximal = 20 #deg/s**
 
 #------------------------------------------------------------------------------------
 #Classes globales
@@ -134,6 +135,29 @@ def joint_mode():
     angle_deg(m[3])
     return m
 
+def limiteur_de_vitesse(v_j1, v_j2, v_j3, v_j4 ):
+        v_j = np.array([v_j1, v_j2, v_j3, v_j4])
+        
+        vitesse_la_plus_grande = 0
+        for i in range(0,4):
+            
+            if abs(v_j[i]) > vitesse_la_plus_grande:
+                vitesse_la_plus_grande = abs(v_j[i])
+    
+        facteur_vitesse = vitesse_maximal/vitesse_la_plus_grande
+
+        rospy.loginfo(facteur_vitesse)
+
+        for i in range(0,4):
+            v_j[i] = v_j[i]*facteur_vitesse
+
+            #if v_j[i] < 0.001:
+            #    v_j[i] = 0
+
+            rospy.loginfo(v_j[i])
+        rospy.loginfo("Limiter ON")
+
+        return(v_j[0], v_j[1], v_j[2], v_j[3])
 #------------------------------------------------------------------------------------
 def joy_callback(Joy: Joy):
     
@@ -186,26 +210,37 @@ def angle_callback(angle: angle):
     #Définir type de message
     cmd = vitesse_moteur_msg()
     fdbk = feedback()
-
+    fdbk.limiteur = 0
 
     if controller_1.joint_mode:
         cmd.m1, cmd.m2, cmd.m3, cmd.m4 = joint_mode()
 
 
     if not controller_1.joint_mode:
-        #Calcul des vitesses moteurs et publier au topic   
+        #Calcul des vitesses moteurs et publier au topic           
         bras = np.array([[angle_rad(angle.j1)],
                         [angle_rad(angle.j2)],
                         [angle_rad(angle.j3)],
                         [angle_rad(angle.j4)]])
         
-        axes() #transfere les inputs en cm/s
+        axes() #transfere les inputs par un facteur
         ctrl = np.array([[v.x],
                         [v.y],
                         [v.z],
                         [0]])
         try:
             cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+            
+            
+            #Max speed security
+            if (abs(cmd.m1) > vitesse_maximal or 
+                abs(cmd.m2) > vitesse_maximal or
+                abs(cmd.m3) > vitesse_maximal or 
+                abs(cmd.m4) > vitesse_maximal):
+
+                cmd.m1, cmd.m2, cmd.m3, cmd.m4 = limiteur_de_vitesse(cmd.m1, cmd.m2, cmd.m3, cmd.m4)
+                fdbk.limiteur = 1
+            
             fdbk.singular_matrix = 0
         
         except Exception:
@@ -213,7 +248,7 @@ def angle_callback(angle: angle):
      #       rospy.logerr("Matrice singuliaire --> Jogger en joints")
 
     
-    #Commenter pour ne plus recevoir de feedback dans la console
+    #Commenter pour ne plus recevoir de feedback dans la console (log)
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
 
@@ -238,7 +273,6 @@ def angle_callback(angle: angle):
     fdbk.speed_multiplier = controller_1.speed_multiplier
 
     pub_feedback.publish(fdbk)
-
 
 
 #------------------------------------------------------------------------------------

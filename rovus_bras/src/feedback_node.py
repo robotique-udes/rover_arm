@@ -9,25 +9,26 @@ import time
 
 #------------------------------------------------
 #Variables globale
-update_time = 100
+update_rate = 10
 
 class display_fdbk:
     
     singular_matrix = False
     
-    j1 = 0
-    j2 = 0
-    j3 = 0
-    j4 = 0
+    j1 = '0'
+    j2 = '0'
+    j3 = '0'
+    j4 = '0'
 
-    m1 = 0
-    m2 = 0
-    m3 = 0
-    m4 = 0
+    m1 = '0'
+    m2 = '0'
+    m3 = '0'
+    m4 = '0'
 
     ctrl_mode = 0
     current_joint = 0
-    speed_multiplier = 0
+    speed_multiplier = '0'
+    limiteur = 0
 
 
 fdbk = display_fdbk()
@@ -50,11 +51,11 @@ def feedback_callback(feedback: feedback):
     fdbk.ctrl_mode = feedback.ctrl_mode
     fdbk.current_joint = feedback.current_joint
     fdbk.speed_multiplier = fdbk.speed_multiplier
+    fdbk.limiteur = feedback.limiteur
 
 
 # ----------------  Create window  ----------------
-#sg.ChangeLookAndFeel('Black')
-#sg.SetOptions(element_padding=(0, 0))
+sg.ChangeLookAndFeel('DarkGrey')
 
 layout = [
             [sg.Text(size=(40, 1), font=('Helvetica', 16), justification='center', key='singular_matrix', text_color='Yellow')],
@@ -69,7 +70,9 @@ layout = [
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m1')],
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m2')],
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m3')],
-            [sg.Text(size=(40, 2), font=('Helvetica', 14), justification='left', key='m4')],
+            [sg.Text(size=(40, 3), font=('Helvetica', 14), justification='left', key='m4')],
+            [sg.Button('Keybinding', font=('Helvetica', 14), size=(40, 1), button_color='#212121', key='Keybind')],
+            [sg.Text(size=(40,10), font=('Helvetica', 14), justification='left', key='keybind_picture')]
 
          ]
 
@@ -83,20 +86,28 @@ sub_feedback = rospy.Subscriber('rovus_bras_feedback', feedback, callback=feedba
 while (True):
 
     # --------- Update window / timeout ---------
-    event, values = window.read(timeout=update_time)
+    event, values = window.read(timeout=update_rate)
     # --------- Display timer in window ---------
     
+    #if event == 'Keybinding':
+    window['keybind_picture'].update('Ça marche estine')
+
     if fdbk.singular_matrix == True:
         window['singular_matrix'].update('Singular Matrix --> Jog in joint')
     else:
         window['singular_matrix'].update('')
 
     if fdbk.ctrl_mode:
-        window['ctrl_mode'].update('JOG Mode : Joint J{:d} selectionné'.format(fdbk.current_joint))
+        window['ctrl_mode'].update('Mode Joint | J{:d} selectionné'.format(fdbk.current_joint))
     elif not fdbk.ctrl_mode:
-        window['ctrl_mode'].update('JOG Mode : Cartésien')
+        window['ctrl_mode'].update('Mode Cartésien')
     else:
         window['ctrl_mode'].update('Impossible de faire la connection')
+
+    if fdbk.limiteur:
+        window['moteur_title'].update('Vitesses moteurs :\t\tLimiting')
+    else:
+        window['moteur_title'].update('Vitesses moteurs :')
 
     window['j1'].update('\tJ1 :  {:s}'.format(fdbk.j1.zfill(6)))
     window['j2'].update('\tJ2 :  {:s}'.format(fdbk.j2.zfill(6)))    

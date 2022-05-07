@@ -13,4 +13,7 @@
         <param name="port" value="/dev/ttyUSB0"/>
     </node>
 
+    <!-- Lancer la node du HMI-->
+    <node name="feedback" pkg="rovus_bras" type="feedback_node.py" />
+
 </launch>
