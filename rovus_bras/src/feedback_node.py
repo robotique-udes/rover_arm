@@ -83,7 +83,8 @@ def main():
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m2')],
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m3')],
             [sg.Text(size=(40, 3), font=('Helvetica', 14), justification='left', key='m4')],
-            [sg.Button('Keybinding', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='Keybind')]
+            [sg.Button('Keybinding', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='Keybind')],
+            [sg.Button('Mode Rover', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='toggle')]
 
          ]
 

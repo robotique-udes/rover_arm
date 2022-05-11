@@ -28,8 +28,8 @@ class moteur
   public:
         short DIR;
         short PUL;
-        short STEPS_REV;
-        short GEARBOX;
+        float STEPS_REV;
+        float GEARBOX;
         float STEPS_DEG;
 
         unsigned long prev_micros = 0;
@@ -38,14 +38,14 @@ class moteur
         short curr_step = 0;
         short angle = 0;
 
-    moteur(short w, short x, short y, short z)
+    moteur(short w, short x, float y, float z)
     {
         DIR = w;
         PUL = x;
         STEPS_REV = y;
         GEARBOX = z;
 
-        STEPS_DEG = STEPS_REV*GEARBOX/360;
+        STEPS_DEG = STEPS_REV*GEARBOX/360.0;
 
         pinMode(DIR, OUTPUT);
         pinMode(PUL, OUTPUT);
@@ -53,10 +53,10 @@ class moteur
 };
 
 //J1
-moteur m1(40, 4, 200, 100);
-moteur m2(1, 5, 200, 100);
-moteur m3(6, 7, 200, 100);
-moteur m4(8, 9, 200, 100);
+moteur m1(40, 4, 1600.0, 100.0);
+moteur m2(1, 5, 1600.0, 100.0);
+moteur m3(6, 7, 1600.0, 100.0);
+moteur m4(8, 9, 1600.0, 100.0);
 
 
 //__________________________________________________________________________________________
@@ -148,7 +148,7 @@ void getPeriod(float msg, class moteur *m)
     if (msg == 0)
         m->period = 0;
     else
-        m->period = 1000000/(abs(msg)*m->STEPS_DEG);
+        m->period = 1000000/((abs(msg)*m->STEPS_DEG));
 }
 
 void getDir(float msg, class moteur *m)
@@ -163,6 +163,7 @@ void doStep(class moteur *m)
 {
     if (m->dir)
         digitalWrite(m->DIR, HIGH);
+        
     else
         digitalWrite(m->DIR, LOW);
 
