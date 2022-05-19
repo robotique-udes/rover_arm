@@ -40,6 +40,7 @@ class controller():
     joint_next = 0
     joint_prev = 0
     joint_current = 1
+    calibration_button = 0
 
     speed_multiplier = 0.1
     speed_increase = 0
@@ -167,6 +168,7 @@ def joy_callback(Joy: Joy):
     controller_1.b = Joy.buttons[3]
     controller_1.lt = Joy.buttons[4]
     controller_1.rt = Joy.buttons[5]
+    controller_1.calibration_button = Joy.buttons[12]
 
     controller_1.joint_mode_toggle = Joy.buttons[8]
 
@@ -208,44 +210,58 @@ def joy_callback(Joy: Joy):
 
 def angle_callback(angle: angle):
     #Définir type de message
+
     cmd = vitesse_moteur_msg()
     fdbk = feedback()
+    
     fdbk.limiteur = 0
+    cmd.calib = 0
+    fdbk.calibration = 0
+    if not controller_1.calibration_button:
 
-    if controller_1.joint_mode:
-        cmd.m1, cmd.m2, cmd.m3, cmd.m4 = joint_mode()
+
+        if controller_1.joint_mode:
+            cmd.m1, cmd.m2, cmd.m3, cmd.m4 = joint_mode()
 
 
-    if not controller_1.joint_mode:
-        #Calcul des vitesses moteurs et publier au topic           
-        bras = np.array([[angle_rad(angle.j1)],
-                        [angle_rad(angle.j2)],
-                        [angle_rad(angle.j3)],
-                        [angle_rad(angle.j4)]])
-        
-        axes() #transfere les inputs par un facteur
-        ctrl = np.array([[v.x],
-                        [v.y],
-                        [v.z],
-                        [0]])
-        try:
-            cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+        if not controller_1.joint_mode:
+            #Calcul des vitesses moteurs et publier au topic           
+            bras = np.array([[angle_rad(angle.j1)],
+                            [angle_rad(angle.j2)],
+                            [angle_rad(angle.j3)],
+                            [angle_rad(angle.j4)]])
             
-            
-            #Max speed security
-            if (abs(cmd.m1) > vitesse_maximal or 
-                abs(cmd.m2) > vitesse_maximal or
-                abs(cmd.m3) > vitesse_maximal or 
-                abs(cmd.m4) > vitesse_maximal):
+            axes() #transfere les inputs par un facteur
+            ctrl = np.array([[v.x],
+                            [v.y],
+                            [v.z],
+                            [0]])
+            try:
+                cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+                
+                
+                #Max speed security
+                if (abs(cmd.m1) > vitesse_maximal or 
+                    abs(cmd.m2) > vitesse_maximal or
+                    abs(cmd.m3) > vitesse_maximal or 
+                    abs(cmd.m4) > vitesse_maximal):
 
-                cmd.m1, cmd.m2, cmd.m3, cmd.m4 = limiteur_de_vitesse(cmd.m1, cmd.m2, cmd.m3, cmd.m4)
-                fdbk.limiteur = 1
+                    cmd.m1, cmd.m2, cmd.m3, cmd.m4 = limiteur_de_vitesse(cmd.m1, cmd.m2, cmd.m3, cmd.m4)
+                    fdbk.limiteur = 1
+                
+                fdbk.singular_matrix = 0
             
-            fdbk.singular_matrix = 0
-        
-        except Exception:
-            fdbk.singular_matrix = 1
-     #       rospy.logerr("Matrice singuliaire --> Jogger en joints")
+            except Exception:
+                fdbk.singular_matrix = 1
+        #       rospy.logerr("Matrice singuliaire --> Jogger en joints")
+    
+    else:
+        fdbk.calibration = 1
+        cmd.m1 = 0
+        cmd.m2 = 0
+        cmd.m3 = 0
+        cmd.m4 = 0
+        cmd.calib = 1
 
     
     #Commenter pour ne plus recevoir de feedback dans la console (log)

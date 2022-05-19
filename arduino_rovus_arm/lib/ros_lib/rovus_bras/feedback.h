@@ -36,6 +36,10 @@ namespace rovus_bras
       _current_joint_type current_joint;
       typedef float _speed_multiplier_type;
       _speed_multiplier_type speed_multiplier;
+      typedef bool _limiteur_type;
+      _limiteur_type limiteur;
+      typedef bool _calibration_type;
+      _calibration_type calibration;
 
     feedback():
       j1(0),
@@ -49,7 +53,9 @@ namespace rovus_bras
       m4(0),
       ctrl_mode(0),
       current_joint(0),
-      speed_multiplier(0)
+      speed_multiplier(0),
+      limiteur(0),
+      calibration(0)
     {
     }
 
@@ -167,6 +173,20 @@ namespace rovus_bras
       *(outbuffer + offset + 2) = (u_speed_multiplier.base >> (8 * 2)) & 0xFF;
       *(outbuffer + offset + 3) = (u_speed_multiplier.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->speed_multiplier);
+      union {
+        bool real;
+        uint8_t base;
+      } u_limiteur;
+      u_limiteur.real = this->limiteur;
+      *(outbuffer + offset + 0) = (u_limiteur.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->limiteur);
+      union {
+        bool real;
+        uint8_t base;
+      } u_calibration;
+      u_calibration.real = this->calibration;
+      *(outbuffer + offset + 0) = (u_calibration.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->calibration);
       return offset;
     }
 
@@ -296,11 +316,27 @@ namespace rovus_bras
       u_speed_multiplier.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->speed_multiplier = u_speed_multiplier.real;
       offset += sizeof(this->speed_multiplier);
+      union {
+        bool real;
+        uint8_t base;
+      } u_limiteur;
+      u_limiteur.base = 0;
+      u_limiteur.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->limiteur = u_limiteur.real;
+      offset += sizeof(this->limiteur);
+      union {
+        bool real;
+        uint8_t base;
+      } u_calibration;
+      u_calibration.base = 0;
+      u_calibration.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->calibration = u_calibration.real;
+      offset += sizeof(this->calibration);
      return offset;
     }
 
     virtual const char * getType() override { return "rovus_bras/feedback"; };
-    virtual const char * getMD5() override { return "7c9704a0f716c0e19ba0477bfba43e2f"; };
+    virtual const char * getMD5() override { return "2254bad58b57902bcd694e2ebca15e8d"; };
 
   };
 

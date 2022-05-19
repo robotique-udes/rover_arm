@@ -16,3 +16,4 @@ bool ctrl_mode #1 = joint mode | 0 = cartesian
 int8 current_joint
 float32 speed_multiplier
 bool limiteur
+bool calibration

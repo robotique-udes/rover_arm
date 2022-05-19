@@ -14,9 +14,16 @@ void getPeriod(float msg, class moteur *m);
 void getDir(float msg, class moteur *m);
 void doStep(class moteur *m);
 float getAngle(class moteur *m);
+void calibration(class moteur *m);
 
 //__________________________________________________________________________________________
-//Variables/constante globales :
+//Variables/constantes globales :
+const bool DIR_POSITIF = 1;
+const bool DIR_NEGATIF = 0;
+const float VITESSE_CALIB = 5; //deg/s
+const int DEBOUNCE = 1000; //time in ms
+bool calib = 0;
+bool calib_mem = 0;
 
 //callback timer's var
 const int CLOCK_CALLBACK = 10; //En millisecondes
@@ -26,6 +33,7 @@ unsigned long prev_millis_Callback;
 class moteur 
 {
   public:
+        short SWITCH;
         short DIR;
         short PUL;
         float STEPS_REV;
@@ -37,26 +45,56 @@ class moteur
         bool dir = 1;
         short curr_step = 0;
         short angle = 0;
+        bool DIR_CALIB;
+        short STEP_CALIB;
+        short SWITCH_STEP;
 
-    moteur(short w, short x, float y, float z)
+    moteur( 
+            short v /*switch pin*/,
+            short c /*siwtch angle*/, 
+            short w /*DIR pin*/, 
+            short x /*PUL pin*/, 
+            float y /*Step per rev*/, 
+            float z /*Gearbox ratio*/, 
+            bool a  /*Direction de la calibration (1 ou 0)*/, 
+            short b /*Angle à atteindre après la calib*/
+            )
     {
+        SWITCH = v;
+        SWITCH_STEP = c*STEPS_DEG;
         DIR = w;
         PUL = x;
         STEPS_REV = y;
         GEARBOX = z;
+        STEP_CALIB = b*STEPS_DEG;
 
         STEPS_DEG = STEPS_REV*GEARBOX/360.0;
 
         pinMode(DIR, OUTPUT);
         pinMode(PUL, OUTPUT);
+        pinMode(SWITCH, INPUT);
     }
+
+    bool getdir_calib()
+    {
+        bool dir;
+
+        if (curr_step > STEP_CALIB)
+            dir = DIR_NEGATIF;
+
+        if (curr_step < STEP_CALIB)
+            dir = DIR_POSITIF;
+
+        return dir;
+    }
+
 };
 
 //J1
-moteur m1(40, 4, 1600.0, 100.0);
-moteur m2(1, 5, 1600.0, 100.0);
-moteur m3(6, 7, 1600.0, 100.0);
-moteur m4(8, 9, 1600.0, 100.0);
+moteur m1(21, 0.0, 40, 4, 1600.0, 100.0, 1, 30);
+moteur m2(201, 0.0, 1, 5, 1600.0, 100.0, 1, 0.0);
+moteur m3(202, 0.0, 6, 7, 1600.0, 100.0, 1, 0.0);
+moteur m4(203, 0.0, 8, 9, 1600.0, 100.0, 1, 0.0);
 
 
 //__________________________________________________________________________________________
@@ -83,23 +121,38 @@ void setup()
 
 void loop()
 {
-    //Ecrire et Publier message --> Devrait être une fonction
-
     //Timer pour les messages (si trop rapide un delay exponentiel se cree)
     if (millis() - prev_millis_Callback > CLOCK_CALLBACK)
     {
+        if (calib == 1)
+        {
+        calibration(&m1);
+        }
+
+
         rovus_bras::angle msg;
         msg.j1 = getAngle(&m1);
         msg.j2 = getAngle(&m2);
         msg.j3 = getAngle(&m3);
-        msg.j4 = getAngle(&m4); 
+        msg.j4 = getAngle(&m4);
         pub.publish(&msg);
         n.spinOnce();
 
         prev_millis_Callback = millis();
     }
-
+    
     step_moteurs();
+
+    if (calib && !calib_mem)
+    {
+        calibration(&m1);
+        calib_mem = 1;
+    }
+    else if (calib && calib_mem)
+    {
+        calib_mem = 0;
+    }
+
 }
 
 
@@ -107,21 +160,6 @@ void loop()
 //__________________________________________________________________________________________
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
-            //log return --> Big impact on perf, use feedback from highlvl instead
-            /*
-            char m1[8], m2[8], m3[8], m4[8];
-            n.loginfo("Message Received:\n");
-            dtostrf(msg.m1,5,4,m1);
-            dtostrf(msg.m2,5,4,m2);
-            dtostrf(msg.m3,5,4,m3);
-            dtostrf(msg.m4,5,4,m4);
-            n.loginfo(m1);
-            n.loginfo(m2);
-            n.loginfo(m3);
-            n.loginfo(m4);
-            n.loginfo("\n\n");
-            */
-
     getPeriod(msg.m1, &m1);
     getDir(msg.m1, &m1);
 
@@ -133,6 +171,8 @@ void callback(const rovus_bras::vitesse_moteur_msg &msg)
 
     getPeriod(msg.m4, &m4);
     getDir(msg.m4, &m4);
+
+    calib = msg.calib;
 }
 
 void step_moteurs()
@@ -183,4 +223,42 @@ void doStep(class moteur *m)
 float getAngle(class moteur *m)
 {
     return (m->curr_step/m->STEPS_DEG);
+}
+
+void calibration(class moteur *m)
+{
+    m->dir = m->getdir_calib();
+    getPeriod(VITESSE_CALIB, m);
+
+    while (digitalRead(m->SWITCH) != 1)
+    {
+        doStep(m);
+    }
+
+    //delay(DEBOUNCE);
+
+    m->curr_step = m->SWITCH_STEP;
+    
+    if (m->curr_step > m->STEP_CALIB)
+        m->dir = DIR_NEGATIF;
+
+    
+    else if (m->curr_step < m->STEP_CALIB)
+        m->dir = DIR_POSITIF;
+    
+    
+    char buffer[10];
+    //itoa(m->curr_step, buffer, 10);
+    //n.loginfo(buffer);
+    itoa(m->STEP_CALIB, buffer, 10);
+    n.loginfo(buffer);
+    n.loginfo("^penis");
+    
+    
+    
+    while(m->curr_step != m->STEP_CALIB)
+    {
+        doStep(m);
+    }
+    
 }

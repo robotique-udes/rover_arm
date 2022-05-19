@@ -20,12 +20,15 @@ namespace rovus_bras
       _m3_type m3;
       typedef float _m4_type;
       _m4_type m4;
+      typedef bool _calib_type;
+      _calib_type calib;
 
     vitesse_moteur_msg():
       m1(0),
       m2(0),
       m3(0),
-      m4(0)
+      m4(0),
+      calib(0)
     {
     }
 
@@ -72,6 +75,13 @@ namespace rovus_bras
       *(outbuffer + offset + 2) = (u_m4.base >> (8 * 2)) & 0xFF;
       *(outbuffer + offset + 3) = (u_m4.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->m4);
+      union {
+        bool real;
+        uint8_t base;
+      } u_calib;
+      u_calib.real = this->calib;
+      *(outbuffer + offset + 0) = (u_calib.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->calib);
       return offset;
     }
 
@@ -122,11 +132,19 @@ namespace rovus_bras
       u_m4.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->m4 = u_m4.real;
       offset += sizeof(this->m4);
+      union {
+        bool real;
+        uint8_t base;
+      } u_calib;
+      u_calib.base = 0;
+      u_calib.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->calib = u_calib.real;
+      offset += sizeof(this->calib);
      return offset;
     }
 
     virtual const char * getType() override { return "rovus_bras/vitesse_moteur_msg"; };
-    virtual const char * getMD5() override { return "a77d45638d7a3263f394e6caf58a02e5"; };
+    virtual const char * getMD5() override { return "22c1ed3801c986a92bc2c8a8a29d4db5"; };
 
   };
 
