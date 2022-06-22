@@ -70,6 +70,10 @@ sub_feedback = rospy.Subscriber('rovus_bras_feedback', feedback, callback=feedba
 
 #Principal window
 def main():
+    start_in_arm_mode = rospy.get_param("~start_in_arm_mode", False)
+    global mem_toggle_mode
+    mem_toggle_mode = int(not start_in_arm_mode)
+
     layout = [
             [sg.Text(size=(40, 1), font=('Helvetica', 16), justification='center', key='singular_matrix', text_color='Yellow')],
             [sg.Text(size=(40, 1), font=('Helvetica', 16), justification='center', key='ctrl_mode')],
@@ -85,7 +89,7 @@ def main():
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m2')],
             [sg.Text(size=(40, 1), font=('Helvetica', 14), justification='left', key='m3')],
             [sg.Text(size=(40, 3), font=('Helvetica', 14), justification='left', key='m4')],
-            [sg.Button('Mode Rover', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='rover_toggle')],
+            [sg.Button('Switch to Rover mode' if start_in_arm_mode else 'Switch to Arm mode', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='rover_toggle')],
             [sg.Button('Keybinding', font=('Helvetica', 16), size=(40, 1), button_color='#212121', key='Keybind')]
 
          ]
@@ -100,7 +104,6 @@ def main():
         # --------- Display timer in window ---------
         
         global mem_keybind
-        global mem_toggle_mode
 
 
         # --------- Keybind window(2) ------------------
@@ -124,16 +127,28 @@ def main():
         #--------- Rover Mode / Joy mode --------------
         if event == 'rover_toggle' and mem_toggle_mode == 0:
             #send bool no error
-                window['rover_toggle'].update('Mode Arm')
-                mem_toggle_mode = 1
+                try:
+                    rospy.ServiceProxy("/set_arm_joy", SetBool).call(True)
+                except rospy.ServiceException as e:
+                    rospy.logerr("Failed to swith to Rover mode, service unavailable: %s" % e)
+                else:
+                    window['rover_toggle'].update('Switch to Arm mode')
+                    mem_toggle_mode = 1
+                # We are now in Rover mode
 
             #send bool error
                 #erreur
 
         elif event == 'rover_toggle' and mem_toggle_mode == 1:
             #send bool no error
-                window['rover_toggle'].update('Mode Rover')
-                mem_toggle_mode = 0        
+                try:
+                    rospy.ServiceProxy("/set_arm_joy", SetBool).call(False)
+                except rospy.ServiceException as e:
+                    rospy.logerr("Failed to swith to Arm mode, service unavailable: %s" % e)
+                else:
+                    window['rover_toggle'].update('Switch to Rover mode')
+                    mem_toggle_mode = 0
+                # We are now in Arm mode
 
             #send bool error
                 #erreur
