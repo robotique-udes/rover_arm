@@ -5,6 +5,7 @@
 #include <ros.h>
 #include <rovus_bras/vitesse_moteur_msg.h>
 #include <rovus_bras/angle.h>
+#include "Servo.h"
 
 //__________________________________________________________________________________________
 //Prototypes de fonctions :
@@ -92,6 +93,22 @@ class moteur
 
 };
 
+class ServoMoteur
+{
+    Servo joint;
+    int pot;
+    int val;
+    int pin;
+    
+    ServoMoteur(int ipin)
+    {
+    joint.attach(ipin);
+
+    val = (val, 0, 1023, 0, 360);
+    joint.attach(pin)
+    }
+};
+
 //J1
 moteur m1(21, 0, 37, 36, 1600.0, 100.0, 1, 30.0);
 moteur m2(21, 0, 1, 5, 1600.0, 100.0, 1, 20.0);
@@ -118,6 +135,8 @@ void setup()
     n.initNode();
     n.advertise(pub);
     n.subscribe(sub);
+
+    //Init Servo
 }
 
 void loop()
