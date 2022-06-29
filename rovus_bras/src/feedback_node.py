@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from unittest.mock import CallableMixin
 from numpy import angle
 import rospy
 from rovus_bras.msg import feedback
@@ -35,6 +36,7 @@ class display_fdbk:
     current_joint = 0
     speed_multiplier = '0'
     limiteur = 0
+    calibration = False
 
 
 fdbk = display_fdbk()
@@ -58,6 +60,7 @@ def feedback_callback(feedback: feedback):
     fdbk.current_joint = feedback.current_joint
     fdbk.speed_multiplier = fdbk.speed_multiplier
     fdbk.limiteur = feedback.limiteur
+    fdbk.calibration = feedback.calibration
 
 # ----------------  Create window  ----------------
 sg.ChangeLookAndFeel('DarkGrey')
@@ -155,8 +158,9 @@ def main():
 
 
         # -------- Principal window -------------------
-
-        if fdbk.singular_matrix == True:
+        if fdbk.calibration == True:
+            window['singular_matrix'].update('|-- Calibration en cours --|')
+        elif fdbk.singular_matrix == True:
             window['singular_matrix'].update('Singular Matrix --> Jog in joint')
         else:
             window['singular_matrix'].update('')

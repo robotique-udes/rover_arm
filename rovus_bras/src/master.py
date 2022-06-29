@@ -14,7 +14,6 @@ from rovus_bras.msg import angle
 from rovus_bras.msg import feedback
 from sensor_msgs.msg import Joy
 
-
 #------------------------------------------------------------------------------------
 #Constantes et variables globales
 pi = 3.14159265359
@@ -239,7 +238,6 @@ def angle_callback(angle: angle):
             try:
                 cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
                 
-                
                 #Max speed security
                 if (abs(cmd.m1) > vitesse_maximal or 
                     abs(cmd.m2) > vitesse_maximal or
@@ -253,7 +251,7 @@ def angle_callback(angle: angle):
             
             except Exception:
                 fdbk.singular_matrix = 1
-        #       rospy.logerr("Matrice singuliaire --> Jogger en joints")
+                #rospy.logerr("Matrice singuliaire --> Jogger en joints")
     
     else:
         fdbk.calibration = 1

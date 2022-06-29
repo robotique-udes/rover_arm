@@ -17,13 +17,11 @@ float getAngle(class moteur *m);
 void calibration(class moteur *m);
 
 //__________________________________________________________________________________________
-//Variables/constantes globales :
-const bool DIR_POSITIF = 0;
-const bool DIR_NEGATIF = 1;
+//Variables et constantes globales :
+const bool DIR_POSITIF = 1;
+const bool DIR_NEGATIF = 0;
 const float VITESSE_CALIB = 5; //deg/s
-const int DEBOUNCE = 1000; //time in ms
 bool calib = 0;
-bool calib_mem = 0;
 
 //callback timer's var
 const int CLOCK_CALLBACK = 10; //En millisecondes
@@ -43,7 +41,7 @@ class moteur
         unsigned long prev_micros = 0;
         unsigned long period = 0;
         bool dir = 1;
-        short curr_step = 0;
+        long curr_step = 0;
         short angle = 0;
         bool DIR_CALIB = 0;
         int STEP_CALIB = 8000;
@@ -95,11 +93,10 @@ class moteur
 };
 
 //J1
-moteur m1(21, 0, 40, 4, 1600.0, 100.0, 1, 30.0);
-moteur m2(20, 0, 1, 5, 1600.0, 100.0, 1, 20.0);
-moteur m3(20, 0, 6, 7, 1600.0, 100.0, 1, 0.0);
-moteur m4(20, 0, 8, 9, 1600.0, 100.0, 1, 0.0);
-
+moteur m1(21, 0, 37, 36, 1600.0, 100.0, 1, 30.0);
+moteur m2(21, 0, 1, 5, 1600.0, 100.0, 1, 20.0);
+moteur m3(21, 0, 6, 7, 1600.0, 100.0, 1, 0.0);
+moteur m4(21, 0, 8, 9, 1600.0, 100.0, 1, 0.0);
 
 //__________________________________________________________________________________________
 //ROS "setup/init" :
@@ -139,6 +136,7 @@ void loop()
         prev_millis_Callback = millis();
     }
 
+    //Programme de calibration permet la calib en parallel avec les messages
     if (calib)
     {
         if (!m1.calib_done)
