@@ -57,12 +57,29 @@ v = ctrl_mouvement()
 
 def calcul_vitesse(robot, axe):
     #angles initiaux
-    angle1 = robot[0]
-    angle2 = robot[1]
-    angle3 = robot[2]
-    angle4 = robot[3]
+    q1 = robot[0]
+    q2 = robot[1]
+    q3 = robot[2]
+    q4 = robot[3]
 
     #grandeur physique (const)
+
+    J1x = 0
+    J1y = 0
+    J1z = 0
+
+    J2x = 0
+    J2y = 0
+    J2z = 0
+
+    J3x = 0
+    J3y = 0
+    J3z = 0
+    
+    J4x = 0
+    J4y = 0
+    J4z = 0
+
     l1 = 0.7
     l2 = 1.5
     l3 = 2
@@ -70,25 +87,30 @@ def calcul_vitesse(robot, axe):
 
 
     #Initialisation de la jacobienne
-    x_1 = -m.sin(angle1) * (l2*m.sin(angle2) + l3*m.sin(angle2+angle3) + l4*m.sin(angle2+angle3+angle4))
-    x_2 = m.cos(angle1) * (l2*m.cos(angle2) + l3*m.cos(angle2+angle3) + l4*m.cos(angle2+angle3+angle4))
-    x_3 = m.cos(angle1) * (l3*m.cos(angle2+angle3) + (l4*m.cos(angle2+angle3+angle4)))
-    x_4 = m.cos(angle1) * (l4*m.cos(angle2+angle3+angle4))
+    
+    # X = J1x*m.cos(q1) + m.sin(q1)*(J1z+J2z) + m.sin(q1)*(J3z+J4z) + J2x*m.cos(q1)*m.cos(q2) + J3x*m.cos(q1)*m.cos(q2+q3) + J4x*m.cos(q1)*m.cos(q2+q3+q4) - J2y*m.sin(q2)*m.cos(q1) - J3y*m.cos(q1)*m.sin(q2+q3) - J4y*m.cos(q1)*m.sin(q2+q3+q4)
+    x_1 = J1x*-m.sin(q1) + m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2x*-m.sin(q1)*m.cos(q2) + J3x*m.sin(q1)*m.cos(q2+q3) + J4x*-m.sin(q1)*m.cos(q2+q3+q4) - J2y*m.sin(q2)*-m.sin(q1) - J3y*-m.sin(q1)*m.sin(q2+q3) - J4y*-m.sin(q1)*m.sin(q2+q3+q4)
+    x_2 = J2x*m.cos(q1)*-m.sin(q2) + J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J2y*m.cos(q2)*m.cos(q1) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
+    x_3 = J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
+    x_4 = J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
 
+    # Y = J1y + J2x*m.sin(q2) + J2y*m.cos(q2) + J3x*m.sin(q2+q3) + J3y*m.cos(q2+q3) + J4x*m.sin(q2+q3+q4) + J4y*m.cos(q2+q3+q4)
     y_1 = 0
-    y_2 = -l2*m.sin(angle2) - l3*m.sin(angle2+angle3) - l4*m.sin(angle2+angle3+angle4)
-    y_3 = - l3*m.sin(angle2+angle3) - l4*m.sin(angle2+angle3+angle4)
-    y_4 = - l4*m.sin(angle2+angle3+angle4)
+    y_2 = J2x*m.cos(q2) + J2y*-m.sin(q2) + J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
+    y_3 = J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
+    y_4 = J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
 
-    z_1 = -m.cos(angle1) * (l2 * m.sin(angle2) + l3 * m.sin(angle2 + angle3) + l4 * m.sin(angle2 + angle3 + angle4))
-    z_2 = -m.sin(angle1) * (l2 * m.cos(angle2) + l3 * m.cos(angle2 + angle3) + l4 * m.cos(angle2 + angle3 + angle4))
-    z_3 = -m.sin(angle1) * (l3 * m.cos(angle2 + angle3) + (l4 * m.cos(angle2 + angle3 + angle4)))
-    z_4 = -m.sin(angle1) * (l4 * m.cos(angle2 + angle3 + angle4))
+    # Z = m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2y*m.sin(q1)*m.sin(q2) + J3y*m.sin(q1)*m.sin(q2+q3) + J4y*m.sin(q1)*m.sin(q2+q3+q4) - J1x*m.sin(q1) - J2x*m.sin(q1)*m.cos(q2) - J3x*m.sin(q1)*m.cos(q2+q3) - J4x*m.sin(q1)*m.cos(q2+q3+q4)
+    z_1 = -m.sin(q1)*(J1z+J2z) + -m.sin(q1)*(J3z+J4z) + J2y*m.cos(q1)*m.sin(q2) + J3y*m.cos(q1)*m.sin(q2+q3) + J4y*m.cos(q1)*m.sin(q2+q3+q4) - J1x*m.cos(q1) - J2x*m.cos(q1)*m.cos(q2) - J3x*m.cos(q1)*m.cos(q2+q3) - J4x*m.cos(q1)*m.cos(q2+q3+q4)
+    z_2 = J2y*m.sin(q1)*m.cos(q2) + J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q3+q4) - J2x*m.sin(q1)*-m.sin(q2) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
+    z_3 = J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q3+q4) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
+    z_4 = J4y*m.sin(q1)*m.cos(q2+q3+q4) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
 
+    # a = q2+q4
     a_1 = 0
     a_2 = 1
-    a_3 = 2
-    a_4 = 3
+    a_3 = 0
+    a_4 = 1
 
 
     j = np.array([[x_1, x_2, x_3, x_4],
