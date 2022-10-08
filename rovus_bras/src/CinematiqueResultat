@@ -1,0 +1,34 @@
+J1o = 0, 0, 0
+
+J2o = 
+   (41) dot(J2o.GetPosition(No), nx>)
+ Result = J1x*cos(q1) + J1z*sin(q1)
+   (41) dot(J2o.GetPosition(No), ny>)
+ Result = J1y
+   (41) dot(J2o.GetPosition(No), nz>)
+ Result = J1z*cos(q1) - J1x*sin(q1)
+
+
+J3o = 
+   (44) dot(J3o.GetPosition(No), nx>)
+ Result = J1x*cos(q1) + sin(q1)*(J1z+J2z) + J2x*cos(q1)*cos(q2) - J2y*sin(q2)*cos(q1)
+   (44) dot(J3o.GetPosition(No), ny>)
+ Result = J1y + J2x*sin(q2) + J2y*cos(q2)
+   (44) dot(J3o.GetPosition(No), nz>)
+ Result = cos(q1)*(J1z+J2z) + J2y*sin(q1)*sin(q2) - J1x*sin(q1) - J2x*sin(q1)*cos(q2)
+
+ J4o = 
+ (47) dot(J4o.GetPosition(No), nx>)
+ Result = J1x*cos(q1) + J3z*sin(q1) + sin(q1)*(J1z+J2z) + J2x*cos(q1)*cos(q2) + J3x*cos(q1)*cos(q2+q3) - J2y*sin(q2)*cos(q1) - J3y*cos(q1)*sin(q2+q3)
+   (47) dot(J4o.GetPosition(No), ny>)
+ Result = J1y + J2x*sin(q2) + J2y*cos(q2) + J3x*sin(q2+q3) + J3y*cos(q2+q3)
+   (47) dot(J4o.GetPosition(No), nz>)
+ Result = J3z*cos(q1) + cos(q1)*(J1z+J2z) + J2y*sin(q1)*sin(q2) + J3y*sin(q1)*sin(q2+q3) - J1x*sin(q1) - J2x*sin(q1)*cos(q2) - J3x*sin(q1)*cos(q2+q3)
+
+ P = 
+ (50) dot(P.GetPosition(No), nx>)
+ Result = J1x*cos(q1) + sin(q1)*(J1z+J2z) + sin(q1)*(J3z+J4z) + J2x*cos(q1)*cos(q2) + J3x*cos(q1)*cos(q2+q3) + J4x*cos(q1)*cos(q2+q3+q4) - J2y*sin(q2)*cos(q1) - J3y*cos(q1)*sin(q2+q3) - J4y*cos(q1)*sin(q2+q3+q4)
+   (50) dot(P.GetPosition(No), ny>)
+ Result = J1y + J2x*sin(q2) + J2y*cos(q2) + J3x*sin(q2+q3) + J3y*cos(q2+q3) + J4x*sin(q2+q3+q4) + J4y*cos(q2+q3+q4)
+   (50) dot(P.GetPosition(No), nz>)
+ Result = cos(q1)*(J1z+J2z) + cos(q1)*(J3z+J4z) + J2y*sin(q1)*sin(q2) + J3y*sin(q1)*sin(q2+q3) + J4y*sin(q1)*sin(q2+q3+q4) - J1x*sin(q1) - J2x*sin(q1)*cos(q2) - J3x*sin(q1)*cos(q2+q3) - J4x*sin(q1)*cos(q2+q3+q4)
