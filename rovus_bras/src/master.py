@@ -5,6 +5,7 @@
 # Don't forget to source before run
 # source ~/rovus0/devel/setup.bash
 
+from matplotlib.pyplot import axis
 import numpy as np
 from numpy.linalg import inv
 import math as m
@@ -20,9 +21,10 @@ pi = 3.14159265359
 debounce_time = 400 #for toggles in msec
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
-speed_increment = 0.1 #en deg/s
+speed_increment = 0.01 #en deg/s
 speed_base = 10 #en deg/s
 vitesse_maximal = 5 #deg/s**
+DEAD_ZONE = 0.25
 
 #------------------------------------------------------------------------------------
 #Classes globales
@@ -34,6 +36,10 @@ class controller():
     lt = 0
     rt = 0
 
+    vx = 0.0
+    vy = 0.0
+    vz = 0.0
+
     joint_mode_toggle = 0
     joint_mode = 0
     joint_next = 0
@@ -41,7 +47,7 @@ class controller():
     joint_current = 1
     calibration_button = 0
 
-    speed_multiplier = 0.1
+    speed_multiplier = 0.01
     speed_increase = 0
     
 class ctrl_mouvement():
@@ -130,9 +136,12 @@ def angle_deg(rad):
     return deg
 
 def axes():
-    v.x = (controller_1.y - controller_1.a)*controller_1.speed_multiplier
-    v.y = (controller_1.rt - controller_1.lt)*controller_1.speed_multiplier
-    v.z = (controller_1.x - controller_1.b)*controller_1.speed_multiplier
+    # v.x = (controller_1.y - controller_1.a)*controller_1.speed_multiplier
+    # v.y = (controller_1.rt - controller_1.lt)*controller_1.speed_multiplier
+    # v.z = (controller_1.x - controller_1.b)*controller_1.speed_multiplier
+    v.x = controller_1.vx*controller_1.speed_multiplier
+    v.y = controller_1.vy*controller_1.speed_multiplier
+    v.z = controller_1.vz*controller_1.speed_multiplier
 
 def joint_mode():
     m=np.zeros(4)
@@ -189,6 +198,11 @@ def joy_callback(Joy: Joy):
     controller_1.b = Joy.buttons[3]
     controller_1.lt = Joy.buttons[4]
     controller_1.rt = Joy.buttons[5]
+
+    controller.vx = -Joy.axes[1]
+    controller.vy = Joy.axes[4]
+    controller.vz = Joy.axes[0]
+
     controller_1.calibration_button = Joy.buttons[12]
 
     controller_1.joint_mode_toggle = Joy.buttons[8]
@@ -198,7 +212,7 @@ def joy_callback(Joy: Joy):
     controller_1.speed_increase = Joy.axes[7]
     
 
-    #rospy.loginfo('\n fine buttons pressed?: %d', controller_1.coarse_toggle)
+    # rospy.loginfo('\n %f', controller_1.vx)
     #controller_1.timestamp = Joy.header.stamp.nsecs/1000 #--> gets time between command for debouncing toggles in msec
     
     #--------------------------------------------------
