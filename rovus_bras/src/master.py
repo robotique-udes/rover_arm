@@ -22,7 +22,7 @@ fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
 speed_increment = 0.1 #en deg/s
 speed_base = 10 #en deg/s
-vitesse_maximal = 20 #deg/s**
+vitesse_maximal = 5 #deg/s**
 
 #------------------------------------------------------------------------------------
 #Classes globales
@@ -64,26 +64,26 @@ def calcul_vitesse(robot, axe):
 
     #grandeur physique (const)
 
-    J1x = 0
-    J1y = 0
-    J1z = 0
+    J1x = 0.0
+    J1y = 0.2
+    J1z = 0.0
 
-    J2x = 0
-    J2y = 0
-    J2z = 0
+    J2x = 0.0
+    J2y = 0.5
+    J2z = 0.0
 
-    J3x = 0
-    J3y = 0
-    J3z = 0
-    
-    J4x = 0
-    J4y = 0
-    J4z = 0
+    J3x = 0.0
+    J3y = 0.5
+    J3z = 0.0
 
-    l1 = 0.7
-    l2 = 1.5
-    l3 = 2
-    l4 = 0.5
+    J4x = 0.0
+    J4y = 0.25
+    J4z = 0.0
+
+    # l1 = 0.7
+    # l2 = 1.5
+    # l3 = 2
+    # l4 = 0.5
 
 
     #Initialisation de la jacobienne
@@ -224,7 +224,7 @@ def joy_callback(Joy: Joy):
             controller_1.joint_mode = 1
 
     #--------------------------------------------------
-    if controller_1.speed_increase >0:
+    if controller_1.speed_increase > 0:
         controller_1.speed_multiplier+=speed_increment
     if controller_1.speed_increase < 0:
         controller_1.speed_multiplier-=speed_increment
@@ -309,7 +309,6 @@ def angle_callback(angle: angle):
     fdbk.speed_multiplier = controller_1.speed_multiplier
 
     pub_feedback.publish(fdbk)
-
 
 #------------------------------------------------------------------------------------
 if __name__=='__main__':

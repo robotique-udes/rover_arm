@@ -19,7 +19,7 @@ void armCalibration();
 //Variables et constantes globales :
 enum States {standby, running, calibration};
 States state;
-
+const int NB_STEPPER = 4;
 bool flagCalib = 0;
 
 //callback timer's var
@@ -50,7 +50,7 @@ void setup()
     n.subscribe(sub);
 
     //Set initial state
-    state = standby;
+    state = running;
 }
 
 void loop()

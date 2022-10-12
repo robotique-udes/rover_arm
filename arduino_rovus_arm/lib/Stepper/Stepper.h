@@ -1,8 +1,8 @@
 #ifndef STEPPER
 #define STEPPER
 
-const bool DIR_POSITIF = 1;
-const bool DIR_NEGATIF = 0;
+const bool DIR_POSITIF = 0;
+const bool DIR_NEGATIF = 1;
 const float VITESSE_CALIB = 5; //deg/s
 
 
