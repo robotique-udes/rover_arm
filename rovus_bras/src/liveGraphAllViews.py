@@ -12,17 +12,10 @@ from rovus_bras.msg import angle
 
 style.use('default')
 
-fig = plt.figure(figsize=(8, 8))
-ax_top = fig.add_subplot(2, 2, 1)
-ax_3d = fig.add_subplot(2, 2, 2, projection='3d')
-ax_front = fig.add_subplot(2, 2, 3)
-ax_right = fig.add_subplot(2, 2, 4)
-
-#Constantes
 #________________________________________________________________
+#Constantes
 ARM_COLOR = 'b'
 JOINTCOLOR = 'o'
-
 
 mpl.rcParams['lines.linewidth'] = 1
 
@@ -47,6 +40,74 @@ q1 = 0
 q2 = 0
 q3 = 0
 q4 = 0
+
+def main():
+    rospy.init_node('liveGraphAllViews')
+    #Sub aux valeurs d'angles
+    sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
+
+    plt.ion()
+
+    #rospy.spin()
+    fig = plt.figure(figsize=(8, 8))
+    ax_top = fig.add_subplot(2, 2, 1)
+    ax_3d = fig.add_subplot(2, 2, 2, projection='3d')
+    ax_front = fig.add_subplot(2, 2, 3)
+    ax_right = fig.add_subplot(2, 2, 4)
+
+    while (not rospy.is_shutdown()):
+        xs = []
+        ys = []
+        zs = []
+
+        xs, ys, zs = calculateCoord()
+
+        ax_3d.clear()
+        ax_3d.set_title("3D view")
+        ax_3d.plot3D(xs, ys, zs)
+        ax_3d.scatter(xs, ys, zs)
+        ax_3d.set_xlabel('z')
+        ax_3d.set_ylabel('x')
+        ax_3d.set_zlabel('y')
+        ax_3d.set_xlim3d(-0.75, 0.75)
+        ax_3d.set_ylim3d(0, 1.5)
+        ax_3d.set_zlim3d(0, 1.5)
+        ax_3d.grid(True)
+
+        ax_top.clear()
+        ax_top.set_title("Top view")
+        ax_top.plot(xs, ys,
+                    xs, ys, JOINTCOLOR)
+        ax_top.set_xlabel('z')
+        ax_top.set_ylabel('x')
+        ax_top.set_xlim(-0.75, 0.75)
+        ax_top.set_ylim(0, 1.5)
+        ax_top.grid(True)
+
+        ax_front.clear()
+        ax_front.set_title("Front view")
+        ax_front.plot(xs, zs,
+                        xs, zs, JOINTCOLOR)
+        ax_front.set_xlabel('z')
+        ax_front.set_ylabel('y')
+        ax_front.set_xlim(-0.75, 0.75)
+        ax_front.set_ylim(0, 1.5)
+        ax_front.grid(True)
+
+        ax_right.clear()
+        ax_right.set_title("Right view")
+        ax_right.plot(ys, zs,
+                        ys, zs, JOINTCOLOR)
+        ax_right.set_xlabel('x')
+        ax_right.set_ylabel('y')
+        ax_right.set_xlim(-0.25, 1.5)
+        ax_right.set_ylim(-0.25, 1.5)
+        ax_right.grid(True)
+
+        plt.draw()
+        plt.pause(0.01)
+
+    rospy.spin()
 
 def calculateCoord():
     J1ox = 0
@@ -75,64 +136,6 @@ def calculateCoord():
 
     return zarray, xarray, yarray
 
-def animate(i):
-    # graph_data = open('/home/phil/Desktop/test.txt','r').read()
-    # lines = graph_data.split('\n')
-    xs = []
-    ys = []
-    zs = []
-
-    xs, ys, zs = calculateCoord()
-    
-    # for line in lines:
-    #     if len(line) > 1:
-    #         x, y, z = line.split(',')
-    #         xs.append(float(x))
-    #         ys.append(float(y))
-    #         zs.append(float(z))
-
-    ax_3d.clear()
-    ax_3d.set_title("3D view")
-    ax_3d.plot3D(xs, ys, zs)
-    ax_3d.scatter(xs, ys, zs)
-    ax_3d.set_xlabel('z')
-    ax_3d.set_ylabel('x')
-    ax_3d.set_zlabel('y')
-    ax_3d.set_xlim3d(-0.75, 0.75)
-    ax_3d.set_ylim3d(0, 1.5)
-    ax_3d.set_zlim3d(0, 1.5)
-    ax_3d.grid(True)
-
-    ax_top.clear()
-    ax_top.set_title("Top view")
-    ax_top.plot(xs, ys,
-                xs, ys, JOINTCOLOR)
-    ax_top.set_xlabel('z')
-    ax_top.set_ylabel('x')
-    ax_top.set_xlim(-0.75, 0.75)
-    ax_top.set_ylim(0, 1.5)
-    ax_top.grid(True)
-
-    ax_front.clear()
-    ax_front.set_title("Front view")
-    ax_front.plot(xs, zs,
-                  xs, zs, JOINTCOLOR)
-    ax_front.set_xlabel('z')
-    ax_front.set_ylabel('y')
-    ax_front.set_xlim(-0.75, 0.75)
-    ax_front.set_ylim(0, 1.5)
-    ax_front.grid(True)
-
-    ax_right.clear()
-    ax_right.set_title("Right view")
-    ax_right.plot(ys, zs,
-                  ys, zs, JOINTCOLOR)
-    ax_right.set_xlabel('x')
-    ax_right.set_ylabel('y')
-    ax_right.set_xlim(-0.25, 1.5)
-    ax_right.set_ylim(-0.25, 1.5)
-    ax_right.grid(True)
-
 def angle_callback(angle: angle):
     global q1
     global q2
@@ -144,13 +147,4 @@ def angle_callback(angle: angle):
     q4 = angle.j4*pi/180
 
 if __name__=='__main__':
-    rospy.init_node('liveGraphAllViews')
-    #Sub aux valeurs d'angles
-    sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
-
-    ani = animation.FuncAnimation(fig, animate, interval=1)
-
-
-    plt.show()
-
-    #rospy.spin()
+    main()

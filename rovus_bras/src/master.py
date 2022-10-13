@@ -23,7 +23,7 @@ fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
 speed_increment = 0.01 #en deg/s
 speed_base = 10 #en deg/s
-vitesse_maximal = 5 #deg/s**
+vitesse_maximal = 20 #deg/s**
 DEAD_ZONE = 0.25
 
 #------------------------------------------------------------------------------------
@@ -136,12 +136,9 @@ def angle_deg(rad):
     return deg
 
 def axes():
-    # v.x = (controller_1.y - controller_1.a)*controller_1.speed_multiplier
-    # v.y = (controller_1.rt - controller_1.lt)*controller_1.speed_multiplier
-    # v.z = (controller_1.x - controller_1.b)*controller_1.speed_multiplier
-    v.x = controller_1.vx*controller_1.speed_multiplier
+    v.x = -controller_1.vx*controller_1.speed_multiplier
     v.y = controller_1.vy*controller_1.speed_multiplier
-    v.z = controller_1.vz*controller_1.speed_multiplier
+    v.z = -controller_1.vz*controller_1.speed_multiplier
 
 def joint_mode():
     m=np.zeros(4)
@@ -169,24 +166,20 @@ def joint_mode():
 def limiteur_de_vitesse(v_j1, v_j2, v_j3, v_j4 ):
         v_j = np.array([v_j1, v_j2, v_j3, v_j4])
         
-        vitesse_la_plus_grande = 0
-        for i in range(0,4):
-            
+        vitesse_la_plus_grande = v_j[0]
+        for i in range(1,4):
             if abs(v_j[i]) > vitesse_la_plus_grande:
                 vitesse_la_plus_grande = abs(v_j[i])
     
         facteur_vitesse = vitesse_maximal/vitesse_la_plus_grande
 
-        rospy.loginfo(facteur_vitesse)
+        #rospy.loginfo(facteur_vitesse)
 
         for i in range(0,4):
             v_j[i] = v_j[i]*facteur_vitesse
 
-            #if v_j[i] < 0.001:
-            #    v_j[i] = 0
-
-            rospy.loginfo(v_j[i])
-        rospy.loginfo("Limiter ON")
+            #rospy.loginfo(v_j[i])
+        #rospy.loginfo("Limiter ON")
 
         return(v_j[0], v_j[1], v_j[2], v_j[3])
 #------------------------------------------------------------------------------------
@@ -229,7 +222,7 @@ def joy_callback(Joy: Joy):
             controller_1.joint_current = nb_joint
     #--------------------------------------------------
 
-    ##Change le mode de jog (joint/xyz)
+    #Change le mode de jog (joint/xyz)
     if controller_1.joint_mode_toggle:
 
         if controller_1.joint_mode == 1:
@@ -301,7 +294,6 @@ def angle_callback(angle: angle):
     #Commenter pour ne plus recevoir de feedback dans la console (log)
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
-
     #rospy.logwarn("Joint mode: %d \t\tSelected Joint: %d", controller_1.joint_mode, controller_1.joint_current)
     #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\nSpeed Multiplier : %f\n\n\n\n\n\n\n\n\n\n\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4, controller_1.speed_multiplier)
 

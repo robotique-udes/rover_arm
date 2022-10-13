@@ -13,6 +13,7 @@ import math as m
 from rovus_bras.msg import angle
 
 style.use('default')
+
 #________________________________________________________________
 #Constantes
 ARM_COLOR = 'b'
@@ -104,28 +105,6 @@ def calculateCoord():
     zarray = [float(J1oz), float(J2oz), float(J3oz), float(J4oz), float(Pz)]
 
     return zarray, xarray, yarray
-
-# def animate(i):
-
-#     # graph_data = open('/home/phil/Desktop/test.txt','r').read()
-#     # lines = graph_data.split('\n')
-#     xs = []
-#     ys = []
-#     zs = []
-
-#     xs, ys, zs = calculateCoord()
-
-#     ax_3d.clear()
-#     ax_3d.set_title("3D view")
-#     ax_3d.plot3D(xs, ys, zs)
-#     ax_3d.scatter(xs, ys, zs)
-#     ax_3d.set_xlabel('z')
-#     ax_3d.set_ylabel('x')
-#     ax_3d.set_zlabel('y')
-#     ax_3d.set_xlim3d(-0.75, 0.75)
-#     ax_3d.set_ylim3d(0, 1.5)
-#     ax_3d.set_zlim3d(0, 1.5)
-#     ax_3d.grid(True)
 
 def angle_callback(angle: angle):
     global q1
