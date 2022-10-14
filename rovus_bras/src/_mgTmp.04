@@ -1,0 +1,60 @@
+   (1) NewtonianFrame N
+   (2) RigidBody J1
+   (3) RigidBody J2
+   (4) RigidBody J3
+   (5) RigidBody J4
+   (6) Particle P
+   (7) Constant J1x, J1y, J1z, J2x, J2y, J2z, J3x, J3y, J3z, J4x, J4y, J4z
+   (8) Constant q1, q2, q3, q4
+   (9) J1o.SetPosition(No, 0>)
+-> (10) p_No_J1o> = 0>
+
+   (11) J2o.SetPosition(J1o, J1x*J1x> + J1y*J1y> + J1z*J1z>)
+-> (12) p_J1o_J2o> = J1x*J1x> + J1y*J1y> + J1z*J1z>
+
+   (13) J3o.SetPosition(J2o, J2x*J2x> + J2y*J2y> + J2z*J2z>)
+-> (14) p_J2o_J3o> = J2x*J2x> + J2y*J2y> + J2z*J2z>
+
+   (15) J4o.SetPosition(J3o, J3x*J3x> + J3y*J3y> + J3z*J3z>)
+-> (16) p_J3o_J4o> = J3x*J3x> + J3y*J3y> + J3z*J3z>
+
+   (17) P.SetPosition(J4o, J4x*J4x> + J4y*J4y> + J4z*J4z>)
+-> (18) p_J4o_P> = J4x*J4x> + J4y*J4y> + J4z*J4z>
+
+   (19) J1.RotateY(N, q1)
+-> (20) J1_N = [cos(q1), 0, -sin(q1);  0, 1, 0;  sin(q1), 0, cos(q1)]
+-> (21) w_J1_N> = 0>
+-> (22) alf_J1_N> = 0>
+
+   (23) J2.RotateZ(J1, q2)
+-> (24) J2_J1 = [cos(q2), sin(q2), 0;  -sin(q2), cos(q2), 0;  0, 0, 1]
+-> (25) w_J2_J1> = 0>
+-> (26) w_J2_N> = 0>
+-> (27) alf_J2_J1> = 0>
+-> (28) alf_J2_N> = 0>
+
+   (29) J3.RotateZ(J2, q3)
+-> (30) J3_J2 = [cos(q3), sin(q3), 0;  -sin(q3), cos(q3), 0;  0, 0, 1]
+-> (31) w_J3_J2> = 0>
+-> (32) w_J3_N> = 0>
+-> (33) alf_J3_J2> = 0>
+-> (34) alf_J3_N> = 0>
+
+   (35) J4.RotateZ(J3, q4-q3)
+-> (36) J4_J3 = [cos(q3-q4), -sin(q3-q4), 0;  sin(q3-q4), cos(q3-q4), 0;  0, 0, 1]
+-> (37) w_J4_J3> = 0>
+-> (38) w_J4_N> = 0>
+-> (39) alf_J4_J3> = 0>
+-> (40) alf_J4_N> = 0>
+
+   (41) %dot(J2o.GetPosition(No), nx>)
+   (42) %dot(J2o.GetPosition(No), ny>)
+   (43) %dot(J2o.GetPosition(No), nz>)
+   (44) %dot(J3o.GetPosition(No), nx>)
+   (45) %dot(J3o.GetPosition(No), ny>)
+   (46) %dot(J3o.GetPosition(No), nz>)
+   (47) %dot(J4o.GetPosition(No), nx>)
+   (48) %dot(J4o.GetPosition(No), ny>)
+   (49) %dot(J4o.GetPosition(No), nz>)
+   (50) 
+t(P.GetPosition(No), nz>)

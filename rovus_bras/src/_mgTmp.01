@@ -4,34 +4,26 @@ RigidBody J2
 RigidBody J3
 RigidBody J4
 Particle P
-
 Constant J1x, J1y, J1z, J2x, J2y, J2z, J3x, J3y, J3z, J4x, J4y, J4z
 Constant q1, q2, q3, q4
-
 J1o.SetPosition(No, 0>)
 J2o.SetPosition(J1o, J1x*J1x> + J1y*J1y> + J1z*J1z>)
 J3o.SetPosition(J2o, J2x*J2x> + J2y*J2y> + J2z*J2z>)
 J4o.SetPosition(J3o, J3x*J3x> + J3y*J3y> + J3z*J3z>)
 P.SetPosition(J4o, J4x*J4x> + J4y*J4y> + J4z*J4z>)
-
 J1.RotateY(N, q1)
 J2.RotateZ(J1, q2)
 J3.RotateZ(J2, q3)
-J4.RotateZ(J3, q4-q3)
+J4.RotateZ(J3, q4)
+q4 = -q3
+%dot(J2o.GetPosition(No), nx>)
+%dot(J2o.GetPosition(No), ny>)
+%dot(J2o.GetPosition(No), nz>)
+%dot(J3o.GetPosition(No), nx>)
+%dot(J3o.GetPosition(No), ny>)
+%dot(J3o.GetPosition(No), nz>)
+%dot(J4o.GetPosition(No), nx>)
+%dot(J4o.GetPosition(No), ny>)
+%dot(J4o.GetPosition(No), nz>)
 
-dot(J2o.GetPosition(No), nx>)
-dot(J2o.GetPosition(No), ny>)
-dot(J2o.GetPosition(No), nz>)
-
-dot(J3o.GetPosition(No), nx>)
-dot(J3o.GetPosition(No), ny>)
-dot(J3o.GetPosition(No), nz>)
-
-dot(J4o.GetPosition(No), nx>)
-dot(J4o.GetPosition(No), ny>)
-dot(J4o.GetPosition(No), nz>)
-
-%dot(P.GetPosition(No), nx>)
-%dot(P.GetPosition(No), ny>)
-%dot(P.GetPosition(No), nz>)
-
+t(P.GetPosition(No), nz>)
