@@ -54,6 +54,7 @@ class ctrl_mouvement():
     x = 0
     z = 0
     y = 0
+    a = 0
     
 controller_1 = controller()
 #mem_controller_1 = controller()
@@ -94,23 +95,23 @@ def calcul_vitesse(robot, axe):
 
     #Initialisation de la jacobienne
     
-    # X = J1x*m.cos(q1) + m.sin(q1)*(J1z+J2z) + m.sin(q1)*(J3z+J4z) + J2x*m.cos(q1)*m.cos(q2) + J3x*m.cos(q1)*m.cos(q2+q3) + J4x*m.cos(q1)*m.cos(q2+q3+q4) - J2y*m.sin(q2)*m.cos(q1) - J3y*m.cos(q1)*m.sin(q2+q3) - J4y*m.cos(q1)*m.sin(q2+q3+q4)
-    x_1 = J1x*-m.sin(q1) + m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2x*-m.sin(q1)*m.cos(q2) + J3x*m.sin(q1)*m.cos(q2+q3) + J4x*-m.sin(q1)*m.cos(q2+q3+q4) - J2y*m.sin(q2)*-m.sin(q1) - J3y*-m.sin(q1)*m.sin(q2+q3) - J4y*-m.sin(q1)*m.sin(q2+q3+q4)
-    x_2 = J2x*m.cos(q1)*-m.sin(q2) + J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J2y*m.cos(q2)*m.cos(q1) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
-    x_3 = J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
-    x_4 = J4x*m.cos(q1)*-m.sin(q2+q3+q4) - J4y*m.cos(q1)*m.cos(q2+q3+q4)
+    # X = J1x*m.cos(q1) + m.sin(q1)*(J1z+J2z) + m.sin(q1)*(J3z+J4z) + J2x*m.cos(q1)*m.cos(q2) + J3x*m.cos(q1)*m.cos(q2+q3) + J4x*m.cos(q1)*m.cos(q2+q4) - J2y*m.sin(q2)*m.cos(q1) - J3y*m.cos(q1)*m.sin(q2+q3) - J4y*m.cos(q1)*m.sin(q2+q4)
+    x_1 = J1x*-m.sin(q1) + m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2x*-m.sin(q1)*m.cos(q2) + J3x*-m.sin(q1)*m.cos(q2+q3) + J4x*-m.sin(q1)*m.cos(q2+q4) - J2y*m.sin(q2)*-m.sin(q1) - J3y*-m.sin(q1)*m.sin(q2+q3) - J4y*-m.sin(q1)*m.sin(q2+q4)
+    x_2 = J2x*m.cos(q1)*-m.sin(q2) + J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q4) - J2y*m.cos(q2)*m.cos(q1) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q4)
+    x_3 = J3x*m.cos(q1)*-m.sin(q2+q3) - J3y*m.cos(q1)*m.cos(q2+q3)
+    x_4 = J4x*m.cos(q1)*-m.sin(q2+q4) - J4y*m.cos(q1)*m.cos(q2+q4)
 
-    # Y = J1y + J2x*m.sin(q2) + J2y*m.cos(q2) + J3x*m.sin(q2+q3) + J3y*m.cos(q2+q3) + J4x*m.sin(q2+q3+q4) + J4y*m.cos(q2+q3+q4)
+    # Y = J1y + J2x*m.sin(q2) + J2y*m.cos(q2) + J3x*m.sin(q2+q3) + J3y*m.cos(q2+q3) + J4x*m.sin(q2+q4) + J4y*m.cos(q2+q4)
     y_1 = 0
-    y_2 = J2x*m.cos(q2) + J2y*-m.sin(q2) + J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
-    y_3 = J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
-    y_4 = J4x*m.cos(q2+q3+q4) + J4y*-m.sin(q2+q3+q4)
+    y_2 = J2x*m.cos(q2) + J2y*-m.sin(q2) + J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q4) + J4y*-m.sin(q2+q4)
+    y_3 = J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3)
+    y_4 = J4x*m.cos(q2+q4) + J4y*-m.sin(q2+q4)
 
-    # Z = m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2y*m.sin(q1)*m.sin(q2) + J3y*m.sin(q1)*m.sin(q2+q3) + J4y*m.sin(q1)*m.sin(q2+q3+q4) - J1x*m.sin(q1) - J2x*m.sin(q1)*m.cos(q2) - J3x*m.sin(q1)*m.cos(q2+q3) - J4x*m.sin(q1)*m.cos(q2+q3+q4)
-    z_1 = -m.sin(q1)*(J1z+J2z) + -m.sin(q1)*(J3z+J4z) + J2y*m.cos(q1)*m.sin(q2) + J3y*m.cos(q1)*m.sin(q2+q3) + J4y*m.cos(q1)*m.sin(q2+q3+q4) - J1x*m.cos(q1) - J2x*m.cos(q1)*m.cos(q2) - J3x*m.cos(q1)*m.cos(q2+q3) - J4x*m.cos(q1)*m.cos(q2+q3+q4)
-    z_2 = J2y*m.sin(q1)*m.cos(q2) + J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q3+q4) - J2x*m.sin(q1)*-m.sin(q2) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
-    z_3 = J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q3+q4) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
-    z_4 = J4y*m.sin(q1)*m.cos(q2+q3+q4) - J4x*m.sin(q1)*-m.sin(q2+q3+q4)
+    # Z = m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2y*m.sin(q1)*m.sin(q2) + J3y*m.sin(q1)*m.sin(q2+q3) + J4y*m.sin(q1)*m.sin(q2+q4) - J1x*m.sin(q1) - J2x*m.sin(q1)*m.cos(q2) - J3x*m.sin(q1)*m.cos(q2+q3) - J4x*m.sin(q1)*m.cos(q2+q4)
+    z_1 = -m.sin(q1)*(J1z+J2z) + -m.sin(q1)*(J3z+J4z) + J2y*m.cos(q1)*m.sin(q2) + J3y*m.cos(q1)*m.sin(q2+q3) + J4y*m.cos(q1)*m.sin(q2+q4) - J1x*m.cos(q1) - J2x*m.cos(q1)*m.cos(q2) - J3x*m.cos(q1)*m.cos(q2+q3) - J4x*m.cos(q1)*m.cos(q2+q4)
+    z_2 = J2y*m.sin(q1)*m.cos(q2) + J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q4) - J2x*m.sin(q1)*-m.sin(q2) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q4)
+    z_3 = J3y*m.sin(q1)*m.cos(q2+q3) - J3x*m.sin(q1)*-m.sin(q2+q3)
+    z_4 = J4y*m.sin(q1)*m.cos(q2+q4) - J4x*m.sin(q1)*-m.sin(q2+q4)
 
     # a = q2+q4
     a_1 = 0
@@ -139,6 +140,7 @@ def axes():
     v.x = -controller_1.vx*controller_1.speed_multiplier
     v.y = controller_1.vy*controller_1.speed_multiplier
     v.z = -controller_1.vz*controller_1.speed_multiplier
+    v.a = (controller_1.lt-controller_1.rt)*controller_1.speed_multiplier
 
 def joint_mode():
     m=np.zeros(4)
@@ -263,7 +265,7 @@ def angle_callback(angle: angle):
             ctrl = np.array([[v.x],
                             [v.y],
                             [v.z],
-                            [0]])
+                            [v.a]])
             try:
                 cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
                 
