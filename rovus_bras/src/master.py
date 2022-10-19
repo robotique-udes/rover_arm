@@ -324,7 +324,7 @@ if __name__=='__main__':
 
     pub = rospy.Publisher('vitesses_moteur', vitesse_moteur_msg, queue_size=10)
 
-    pub_feedback = rospy.Publisher('rovus_bras_feedback', feedback, queue_size=None)
+    pub_feedback = rospy.Publisher('rovus_bras_feedback', feedback, queue_size=1)
 
     #Sub au controlleur
     sub_ctrl = rospy.Subscriber('joy', Joy, callback=joy_callback)
