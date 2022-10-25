@@ -9,7 +9,7 @@
     <node name="master" pkg="rovus_bras" type="master.py" />
 
     <!--Lancer la communication avec l'arduino-->
-    <node name="arduino" pkg="rosserial_python" type="serial_node.py">
+    <node name="arduino" pkg="rosserial_arduino" type="serial_node.py">
         <!-- <param name="port" value="/dev/ttyACM0"/> -->
     </node>
 

@@ -68,30 +68,23 @@ void loop()
 
         case calibration:
             armCalibration();
-
-
     }
 }
 //__________________________________________________________________________________________
 //Fonctions
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
-    if (!flagCalib)
-    {
-        j1.getPeriod(msg.m1);
-        j1.getDir(msg.m1);
+    j1.getPeriod(msg.m1_Period);
+    j1.getDir(msg.m1_Dir);
 
-        j2.getPeriod(msg.m2);
-        j2.getDir(msg.m2);
+    j2.getPeriod(msg.m2_Period);
+    j2.getDir(msg.m2_Dir);
 
-        j3.getPeriod(msg.m3);
-        j3.getDir(msg.m3);
+    j3.getPeriod(msg.m3_Period);
+    j3.getDir(msg.m3_Dir);
 
-        j4.getPeriod(msg.m4);
-        j4.getDir(msg.m4);
-
-        flagCalib = msg.calib;
-    }
+    j4.getPeriod(msg.m4_Period);
+    j4.getDir(msg.m4_Dir);
 }
 
 //Publie les valeurs des angles 

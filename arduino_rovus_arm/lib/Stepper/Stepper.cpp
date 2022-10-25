@@ -37,29 +37,19 @@ void Stepper::getPeriod(float msg)
         period = 1000000/((abs(msg) * STEPS_DEG));
 }
 
-void Stepper::getDir(float msg)
+void Stepper::getDir(bool msg)
 {
-	if (msg > 0)
-		dir = DIR_NEGATIF;
-	else
-		dir = DIR_POSITIF;
+    dir = msg;
 }
 
 void Stepper::doStep()
 {
-    if (dir)
-        digitalWrite(DIR, HIGH);
-        
-    else
-        digitalWrite(DIR, LOW);
+    dir? digitalWrite(DIR, HIGH): digitalWrite(DIR, LOW);
 
     if ((micros() - prev_micros > (period)) && (period != 0))
     {
-        if (dir)
-            curr_step += 1;
-        else
-            curr_step -= 1;
-        
+        dir? curr_step += 1: curr_step -= 1;
+
         prev_micros = micros();
         digitalWrite(PUL, HIGH);
         digitalWrite(PUL, LOW);	

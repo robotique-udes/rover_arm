@@ -56,8 +56,18 @@ class display_fdbk:
     limiteur = 0
     calibration = False
 
-
 fdbk = display_fdbk()
+
+class nodeLogStatus():
+    name:str = 'none'
+    level:int = 0
+    msg:str = ''
+
+    def __init__(self, name:str):
+        self.name = name
+
+logArduino = nodeLogStatus('arduino')
+logJoy = nodeLogStatus('joy')
 
 # ---------- Fonctions ---------------
 def feedback_callback(feedback: feedback):
@@ -86,9 +96,13 @@ def joy_callback(msg: Bool):
 
 
 def log_callback(msg: Log):
-    lastMsgRosSerial = msg.header
+    if logArduino.name in msg.name:
+        logArduino.level = msg.level
+        logArduino.msg = msg.msg
 
-    rospy.logwarn(msg.name)
+    if logJoy.name in msg.name:
+        logJoy.level = msg.level
+        logJoy.msg = msg.msg
 
 
 def getLayout():
@@ -245,11 +259,11 @@ def update_for_keybind(window: sg.Window, event):
         ]
 
         window2 = sg.Window("Keybinding", layout2)
-        event, values = window2.read(timeout=update_rate)
+        event, values = window2.read(timeout=update_rate)   # type: ignore
 
     elif event == "Keybind" and mem_keybind == 1:
         mem_keybind = 0
-        window2.close()
+        window2.close()     # type: ignore
 
 
 def update_for_liveAllViews(window: sg.Window, event, launch: roslaunch.ROSLaunch):
@@ -263,14 +277,13 @@ def update_for_liveAllViews(window: sg.Window, event, launch: roslaunch.ROSLaunc
         node_liveAllViews = roslaunch.core.Node("rovus_bras", "liveGraphAllViews.py")
         # live3DView_process = launch.launch(node_live3DView)
         liveAllViews_process = launch.launch(node_liveAllViews)
-        window["liveAllViews"].update("Close All Views")
+        window["liveAllViews"].update("Close All Views")        # type: ignore
 
     elif event == "liveAllViews" and mem_liveAllViews == 1:
         mem_liveAllViews = 0
 
-        # live3DView_process.stop()
-        liveAllViews_process.stop()
-        window["liveAllViews"].update("Open All Views")
+        liveAllViews_process.stop()     # type: ignore
+        window["liveAllViews"].update("Open All Views")     # type: ignore
 
 
 def update_for_live3DView(window: sg.Window, event, launch: roslaunch.ROSLaunch):
@@ -284,46 +297,45 @@ def update_for_live3DView(window: sg.Window, event, launch: roslaunch.ROSLaunch)
         # node_liveAllViews = roslaunch.core.Node('rovus_bras', 'liveGraphAllViews.py')
         live3DView_process = launch.launch(node_live3DView)
         # liveAllViews_process = launch.launch(node_liveAllViews)
-        window["live3DView"].update("Close 3D View")
+        window["live3DView"].update("Close 3D View")        # type: ignore
 
     elif event == "live3DView" and mem_live3DView == 1:
         mem_live3DView = 0
 
-        live3DView_process.stop()
-        # liveAllViews_process.stop()
-        window["live3DView"].update("Open 3D View")
+        live3DView_process.stop()       # type: ignore
+        window["live3DView"].update("Open 3D View")     # type: ignore
 
 
 def update_for_MainWindows(window: sg.Window):
     if fdbk.calibration == True:
-        window["singular_matrix"].update("|-- Calibration en cours --|")
+        window["singular_matrix"].update("|-- Calibration en cours --|")        # type: ignore
     elif fdbk.singular_matrix == True:
-        window["singular_matrix"].update("Singular Matrix --> Jog in joint")
+        window["singular_matrix"].update("Singular Matrix --> Jog in joint")        # type: ignore
     else:
-        window["singular_matrix"].update("")
+        window["singular_matrix"].update("")        # type: ignore
 
     if fdbk.ctrl_mode:
-        window["ctrl_mode"].update("Mode Joint | J{:d} selectionné".format(fdbk.current_joint))
+        window["ctrl_mode"].update("Mode Joint | J{:d} selectionné".format(fdbk.current_joint))     # type: ignore
     elif not fdbk.ctrl_mode:
-        window["ctrl_mode"].update("Mode Cartésien")
+        window["ctrl_mode"].update("Mode Cartésien")        # type: ignore
     else:
-        window["ctrl_mode"].update("Impossible de faire la connection")
+        window["ctrl_mode"].update("Impossible de faire la connection")     # type: ignore
 
     if fdbk.limiteur:
-        window["limiting"].update(" Limiting")
+        window["limiting"].update(" Limiting")      # type: ignore
     else:
-        window["limiting"].update("")
+        window["limiting"].update("")       # type: ignore
 
-    window["j1"].update("\tJ1 :  {:s}".format(fdbk.j1.zfill(6)))
-    window["j2"].update("\tJ2 :  {:s}".format(fdbk.j2.zfill(6)))
-    window["j3"].update("\tJ3 :  {:s}".format(fdbk.j3.zfill(6)))
-    window["j4"].update("\tJ4 :  {:s}".format(fdbk.j4.zfill(6)))
+    window["j1"].update("\tJ1 :  {:s}".format(fdbk.j1.zfill(6)))        # type: ignore
+    window["j2"].update("\tJ2 :  {:s}".format(fdbk.j2.zfill(6)))        # type: ignore
+    window["j3"].update("\tJ3 :  {:s}".format(fdbk.j3.zfill(6)))        # type: ignore
+    window["j4"].update("\tJ4 :  {:s}".format(fdbk.j4.zfill(6)))        # type: ignore
 
-    window["mult"].update("Multiplicateur : {:s}".format(fdbk.speed_multiplier))
-    window["m1"].update("\tm1 :  {:s}".format(fdbk.m1.zfill(4)))
-    window["m2"].update("\tm2 :  {:s}".format(fdbk.m2.zfill(4)))
-    window["m3"].update("\tm3 :  {:s}".format(fdbk.m3.zfill(4)))
-    window["m4"].update("\tm4 :  {:s}".format(fdbk.m4.zfill(4)))
+    window["mult"].update("Multiplicateur : {:s}".format(fdbk.speed_multiplier))        # type: ignore
+    window["m1"].update("\tm1 :  {:s}".format(fdbk.m1.zfill(4)))        # type: ignore
+    window["m2"].update("\tm2 :  {:s}".format(fdbk.m2.zfill(4)))        # type: ignore
+    window["m3"].update("\tm3 :  {:s}".format(fdbk.m3.zfill(4)))        # type: ignore
+    window["m4"].update("\tm4 :  {:s}".format(fdbk.m4.zfill(4)))        # type: ignore
 
 
 def update_for_toggle_mode(window: sg.Window, event):
@@ -336,7 +348,7 @@ def update_for_toggle_mode(window: sg.Window, event):
         except rospy.ServiceException as e:
             rospy.logerr("Failed to swith to Rover mode, service unavailable: %s" % e)
         else:
-            window["rover_toggle"].update("Switch to Arm mode")
+            window["rover_toggle"].update("Switch to Arm mode")     # type: ignore
             mem_toggle_mode = 1
         # We are now in Rover mode
 
@@ -350,7 +362,7 @@ def update_for_toggle_mode(window: sg.Window, event):
         except rospy.ServiceException as e:
             rospy.logerr("Failed to swith to Arm mode, service unavailable: %s" % e)
         else:
-            window["rover_toggle"].update("Switch to Rover mode")
+            window["rover_toggle"].update("Switch to Rover mode")       # type: ignore
             mem_toggle_mode = 0
         # We are now in Arm mode
 
@@ -388,11 +400,16 @@ def update_node_status(window: sg.Window):
         if "liveGraphAllViews" in text:
             SetLED(window, "LED_node_liveAllViews", "green")
 
-    update_node_error()
+    update_node_error(window)
 
 
-def update_node_error():
-    penis = 1
+def update_node_error(window: sg.Window):
+
+    if 'error' in logArduino.msg:
+        SetLED(window, "LED_node_rosSerial", "yellow")
+    
+    if logJoy.level == 8:
+        SetLED(window, "LED_node_joy", "yellow")
 
 
 def LEDIndicator(key=None, radius=30):
@@ -436,7 +453,7 @@ def main():
     # ----------------- main Loop -----------------
     while not rospy.is_shutdown():
         # updates
-        event, values = window.read(timeout=update_rate)
+        event, values = window.read(timeout=update_rate)        # type: ignore
         update_for_keybind(window, event)
         update_for_liveAllViews(window, event, launch)
         update_for_live3DView(window, event, launch)

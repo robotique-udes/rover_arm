@@ -39,7 +39,7 @@ class Stepper
         float   iAngleCalib /*Angle à atteindre après la calib*/);
         
         void getPeriod(float msg);
-        void getDir(float msg);
+        void getDir(bool msg);
         void doStep();
         float getAngle() {return curr_step/STEPS_DEG;}
         void calibration();

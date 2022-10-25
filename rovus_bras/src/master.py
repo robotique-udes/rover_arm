@@ -40,16 +40,21 @@ class controller():
     vy = 0.0
     vz = 0.0
 
-    joint_mode_toggle = 0
-    joint_mode = 0
-    joint_next = 0
-    joint_prev = 0
-    joint_current = 1
-    calibration_button = 0
+    joint_mode_toggle: bool = False
+    joint_mode: bool = False
+    joint_next: bool = False
+    joint_prev: bool = False
+    joint_current: int = 1
+    calibration_button: bool = False
 
     speed_multiplier = 0.01
     speed_increase = 0
-    
+
+class Stepper():
+    dir:bool = 0
+    en: bool = 0
+    period: float = 0
+
 class ctrl_mouvement():
     x = 0
     z = 0
@@ -59,6 +64,11 @@ class ctrl_mouvement():
 controller_1 = controller()
 #mem_controller_1 = controller()
 v = ctrl_mouvement()
+
+m1 = Stepper()
+m2 = Stepper()
+m3 = Stepper()
+m4 = Stepper()
 
 #------------------------------------------------------------------------------------
 
@@ -184,6 +194,14 @@ def limiteur_de_vitesse(v_j1, v_j2, v_j3, v_j4 ):
         #rospy.loginfo("Limiter ON")
 
         return(v_j[0], v_j[1], v_j[2], v_j[3])
+
+def getDir(m: Stepper):
+    if m.period < 0:
+        m.dir = False
+    else:
+        m.dir = True
+
+        
 #------------------------------------------------------------------------------------
 def joy_callback(Joy: Joy):
     
@@ -244,14 +262,14 @@ def angle_callback(angle: angle):
     cmd = vitesse_moteur_msg()
     fdbk = feedback()
     
-    fdbk.limiteur = 0
-    cmd.calib = 0
+    fdbk.limiteur = 0   
+    cmd.calib = 0       
     fdbk.calibration = 0
     if not controller_1.calibration_button:
 
 
         if controller_1.joint_mode:
-            cmd.m1, cmd.m2, cmd.m3, cmd.m4 = joint_mode()
+            m1.period, m2.period, m3.period, m4.period = joint_mode()
 
 
         if not controller_1.joint_mode:
@@ -267,37 +285,50 @@ def angle_callback(angle: angle):
                             [v.z],
                             [v.a]])
             try:
-                cmd.m1, cmd.m2, cmd.m3, cmd.m4 = calcul_vitesse(bras, ctrl)
+                m1.period, m2.period, m3.period, m4.period = calcul_vitesse(bras, ctrl)
                 
                 #Max speed security
-                if (abs(cmd.m1) > vitesse_maximal or 
-                    abs(cmd.m2) > vitesse_maximal or
-                    abs(cmd.m3) > vitesse_maximal or 
-                    abs(cmd.m4) > vitesse_maximal):
+                if (abs(m1.period) > vitesse_maximal or 
+                    abs(m2.period) > vitesse_maximal or
+                    abs(m3.period) > vitesse_maximal or 
+                    abs(m4.period) > vitesse_maximal):
 
-                    cmd.m1, cmd.m2, cmd.m3, cmd.m4 = limiteur_de_vitesse(cmd.m1, cmd.m2, cmd.m3, cmd.m4)
-                    fdbk.limiteur = 1
+                    m1.period, m2.period, m3.period, m4.period = limiteur_de_vitesse(m1.period, m2.period, m3.period, m4.period)
+                    fdbk.limiteur = 1       
                 
-                fdbk.singular_matrix = 0
+                fdbk.singular_matrix = 0        
             
             except Exception:
-                fdbk.singular_matrix = 1
+                fdbk.singular_matrix = 1        
                 #rospy.logerr("Matrice singuliaire --> Jogger en joints")
     
     else:
-        fdbk.calibration = 1
-        cmd.m1 = 0
-        cmd.m2 = 0
-        cmd.m3 = 0
-        cmd.m4 = 0
+        fdbk.calibration = 1      
+        m1.period = 0
+        m2.period = 0
+        m3.period = 0
+        m4.period = 0
         cmd.calib = 1
-
     
     #Commenter pour ne plus recevoir de feedback dans la console (log)
     #rospy.loginfo('Received : \nAngle 1:\t%d \nAngle 2:\t%d \nAngle 3:\t%d \nAngle 4:\t%d\n\n', angle.j1, angle.j2, angle.j3, angle.j4)
     #rospy.loginfo(ctrl)
     #rospy.logwarn("Joint mode: %d \t\tSelected Joint: %d", controller_1.joint_mode, controller_1.joint_current)
     #rospy.loginfo('Sending : \nVitesse M1:\t%f \nVitesse M2:\t%f \nVitesse M3:\t%f \nVitesse M4:\t%f\nSpeed Multiplier : %f\n\n\n\n\n\n\n\n\n\n\n\n', cmd.m1, cmd.m2, cmd.m3, cmd.m4, controller_1.speed_multiplier)
+
+    getDir(m1)
+    getDir(m2)
+    getDir(m3)
+    getDir(m4)
+
+    cmd.m1_Period = m1.period
+    cmd.m1_Dir = m1.dir
+    cmd.m2_Period = m2.period
+    cmd.m2_Dir = m2.dir
+    cmd.m3_Period = m3.period
+    cmd.m3_Dir = m3.dir
+    cmd.m4_Period = m4.period
+    cmd.m4_Dir = m4.dir
 
     pub.publish(cmd)
 
@@ -307,10 +338,10 @@ def angle_callback(angle: angle):
     fdbk.j3 = angle.j3
     fdbk.j4 = angle.j4
 
-    fdbk.m1 = cmd.m1
-    fdbk.m2 = cmd.m2
-    fdbk.m3 = cmd.m3
-    fdbk.m4 = cmd.m4
+    fdbk.m1 = m1.period
+    fdbk.m2 = m2.period
+    fdbk.m3 = m3.period
+    fdbk.m4 = m4.period
 
     fdbk.ctrl_mode = controller_1.joint_mode
     fdbk.current_joint = controller_1.joint_current
