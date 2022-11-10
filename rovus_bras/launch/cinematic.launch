@@ -14,7 +14,7 @@
     </node>
 
     <!-- Lancer la node du HMI-->
-    <node name="feedback" pkg="rovus_bras" type="feedback_node.py" />
+    <!-- <node name="feedback" pkg="rovus_bras" type="feedback_node.py" /> -->
 
     <!-- Lancer la node des graphiques-->   
     <!-- <node name="liveGraph3DView" pkg="rovus_bras" type="liveGraph3DView.py" />

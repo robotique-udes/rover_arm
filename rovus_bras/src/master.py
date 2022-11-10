@@ -178,7 +178,7 @@ def joint_mode():
 def limiteur_de_vitesse(v_j1, v_j2, v_j3, v_j4 ):
         v_j = np.array([v_j1, v_j2, v_j3, v_j4])
         
-        vitesse_la_plus_grande = v_j[0]
+        vitesse_la_plus_grande = abs(v_j[0])
         for i in range(1,4):
             if abs(v_j[i]) > vitesse_la_plus_grande:
                 vitesse_la_plus_grande = abs(v_j[i])
@@ -333,15 +333,9 @@ def angle_callback(angle: angle):
     pub.publish(cmd)
 
     #Build feedback message
-    fdbk.j1 = angle.j1
-    fdbk.j2 = angle.j2
-    fdbk.j3 = angle.j3
-    fdbk.j4 = angle.j4
-
-    fdbk.m1 = m1.period
-    fdbk.m2 = m2.period
-    fdbk.m3 = m3.period
-    fdbk.m4 = m4.period
+    fdbk.angles = [angle.j1, angle.j2, angle.j3, angle.j4]
+    fdbk.vitesses = [m1.period, m2.period, m3.period, m4.period]
+    fdbk.enable = [1, 1, 1, 1]
 
     fdbk.ctrl_mode = controller_1.joint_mode
     fdbk.current_joint = controller_1.joint_current
