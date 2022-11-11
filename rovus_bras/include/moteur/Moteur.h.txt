@@ -1,0 +1,30 @@
+#ifndef MOTEUR_H
+#define MOTEUR_H
+
+#include "Moteur.cpp"
+
+class Moteur
+{
+    private:
+        float angle = 0.0;
+        float period = 0.0;
+        bool enable = true;
+        bool dir = 0;
+
+    public:
+        Moteur();
+        ~Moteur();
+        void setAngle(float iAngle);
+        float getAngle();
+
+        void setPeriod(float iPeriod);
+        float getPeriod();
+
+        void setEnable(bool iEnable);
+        float getEnable();
+
+        void setDir(bool iEnable);
+        float getDir();
+};
+
+#endif

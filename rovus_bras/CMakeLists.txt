@@ -53,6 +53,7 @@ add_message_files(
   feedback.msg
   vitesse_moteur_msg.msg
   angle.msg
+  arm_gui_cmd.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -111,8 +112,8 @@ catkin_package(
 # catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES rovus_bras
-#  CATKIN_DEPENDS roscpp rospy
-#  DEPENDS system_lib
+#  #CATKIN_DEPENDS roscpp rospy
+#  #DEPENDS system_lib
 # )
 
 ###########
@@ -121,15 +122,16 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(
-# include
-#   ${catkin_INCLUDE_DIRS}
-# )
+include_directories(
+ include
+  ${catkin_INCLUDE_DIRS}
+)
 
-## Declare a C++ library
+# Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/rovus_bras.cpp
 # )
+# add_library(rovus_bras include/moteur/Moteur.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -209,3 +211,8 @@ install(FILES
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(master_cpp src/master.cpp)
+target_link_libraries(master_cpp ${catkin_LIBRARIES})
+
+

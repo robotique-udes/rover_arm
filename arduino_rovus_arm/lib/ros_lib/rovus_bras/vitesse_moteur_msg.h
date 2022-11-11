@@ -12,46 +12,16 @@ namespace rovus_bras
   class vitesse_moteur_msg : public ros::Msg
   {
     public:
-      typedef float _m1_Period_type;
-      _m1_Period_type m1_Period;
-      typedef bool _m1_Dir_type;
-      _m1_Dir_type m1_Dir;
-      typedef bool _m1_En_type;
-      _m1_En_type m1_En;
-      typedef float _m2_Period_type;
-      _m2_Period_type m2_Period;
-      typedef bool _m2_Dir_type;
-      _m2_Dir_type m2_Dir;
-      typedef bool _m2_En_type;
-      _m2_En_type m2_En;
-      typedef float _m3_Period_type;
-      _m3_Period_type m3_Period;
-      typedef bool _m3_Dir_type;
-      _m3_Dir_type m3_Dir;
-      typedef bool _m3_En_type;
-      _m3_En_type m3_En;
-      typedef float _m4_Period_type;
-      _m4_Period_type m4_Period;
-      typedef bool _m4_Dir_type;
-      _m4_Dir_type m4_Dir;
-      typedef bool _m4_En_type;
-      _m4_En_type m4_En;
+      float Period[4];
+      bool Dir[4];
+      bool En[4];
       typedef bool _calib_type;
       _calib_type calib;
 
     vitesse_moteur_msg():
-      m1_Period(0),
-      m1_Dir(0),
-      m1_En(0),
-      m2_Period(0),
-      m2_Dir(0),
-      m2_En(0),
-      m3_Period(0),
-      m3_Dir(0),
-      m3_En(0),
-      m4_Period(0),
-      m4_Dir(0),
-      m4_En(0),
+      Period(),
+      Dir(),
+      En(),
       calib(0)
     {
     }
@@ -59,102 +29,36 @@ namespace rovus_bras
     virtual int serialize(unsigned char *outbuffer) const override
     {
       int offset = 0;
+      for( uint32_t i = 0; i < 4; i++){
       union {
         float real;
         uint32_t base;
-      } u_m1_Period;
-      u_m1_Period.real = this->m1_Period;
-      *(outbuffer + offset + 0) = (u_m1_Period.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_m1_Period.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_m1_Period.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_m1_Period.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->m1_Period);
+      } u_Periodi;
+      u_Periodi.real = this->Period[i];
+      *(outbuffer + offset + 0) = (u_Periodi.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_Periodi.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_Periodi.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_Periodi.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->Period[i]);
+      }
+      for( uint32_t i = 0; i < 4; i++){
       union {
         bool real;
         uint8_t base;
-      } u_m1_Dir;
-      u_m1_Dir.real = this->m1_Dir;
-      *(outbuffer + offset + 0) = (u_m1_Dir.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m1_Dir);
+      } u_Diri;
+      u_Diri.real = this->Dir[i];
+      *(outbuffer + offset + 0) = (u_Diri.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->Dir[i]);
+      }
+      for( uint32_t i = 0; i < 4; i++){
       union {
         bool real;
         uint8_t base;
-      } u_m1_En;
-      u_m1_En.real = this->m1_En;
-      *(outbuffer + offset + 0) = (u_m1_En.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m1_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m2_Period;
-      u_m2_Period.real = this->m2_Period;
-      *(outbuffer + offset + 0) = (u_m2_Period.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_m2_Period.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_m2_Period.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_m2_Period.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->m2_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m2_Dir;
-      u_m2_Dir.real = this->m2_Dir;
-      *(outbuffer + offset + 0) = (u_m2_Dir.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m2_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m2_En;
-      u_m2_En.real = this->m2_En;
-      *(outbuffer + offset + 0) = (u_m2_En.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m2_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m3_Period;
-      u_m3_Period.real = this->m3_Period;
-      *(outbuffer + offset + 0) = (u_m3_Period.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_m3_Period.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_m3_Period.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_m3_Period.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->m3_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m3_Dir;
-      u_m3_Dir.real = this->m3_Dir;
-      *(outbuffer + offset + 0) = (u_m3_Dir.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m3_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m3_En;
-      u_m3_En.real = this->m3_En;
-      *(outbuffer + offset + 0) = (u_m3_En.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m3_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m4_Period;
-      u_m4_Period.real = this->m4_Period;
-      *(outbuffer + offset + 0) = (u_m4_Period.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_m4_Period.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_m4_Period.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_m4_Period.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->m4_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m4_Dir;
-      u_m4_Dir.real = this->m4_Dir;
-      *(outbuffer + offset + 0) = (u_m4_Dir.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m4_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m4_En;
-      u_m4_En.real = this->m4_En;
-      *(outbuffer + offset + 0) = (u_m4_En.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->m4_En);
+      } u_Eni;
+      u_Eni.real = this->En[i];
+      *(outbuffer + offset + 0) = (u_Eni.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->En[i]);
+      }
       union {
         bool real;
         uint8_t base;
@@ -168,114 +72,39 @@ namespace rovus_bras
     virtual int deserialize(unsigned char *inbuffer) override
     {
       int offset = 0;
+      for( uint32_t i = 0; i < 4; i++){
       union {
         float real;
         uint32_t base;
-      } u_m1_Period;
-      u_m1_Period.base = 0;
-      u_m1_Period.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_m1_Period.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_m1_Period.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_m1_Period.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->m1_Period = u_m1_Period.real;
-      offset += sizeof(this->m1_Period);
+      } u_Periodi;
+      u_Periodi.base = 0;
+      u_Periodi.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_Periodi.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_Periodi.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_Periodi.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->Period[i] = u_Periodi.real;
+      offset += sizeof(this->Period[i]);
+      }
+      for( uint32_t i = 0; i < 4; i++){
       union {
         bool real;
         uint8_t base;
-      } u_m1_Dir;
-      u_m1_Dir.base = 0;
-      u_m1_Dir.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m1_Dir = u_m1_Dir.real;
-      offset += sizeof(this->m1_Dir);
+      } u_Diri;
+      u_Diri.base = 0;
+      u_Diri.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->Dir[i] = u_Diri.real;
+      offset += sizeof(this->Dir[i]);
+      }
+      for( uint32_t i = 0; i < 4; i++){
       union {
         bool real;
         uint8_t base;
-      } u_m1_En;
-      u_m1_En.base = 0;
-      u_m1_En.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m1_En = u_m1_En.real;
-      offset += sizeof(this->m1_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m2_Period;
-      u_m2_Period.base = 0;
-      u_m2_Period.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_m2_Period.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_m2_Period.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_m2_Period.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->m2_Period = u_m2_Period.real;
-      offset += sizeof(this->m2_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m2_Dir;
-      u_m2_Dir.base = 0;
-      u_m2_Dir.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m2_Dir = u_m2_Dir.real;
-      offset += sizeof(this->m2_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m2_En;
-      u_m2_En.base = 0;
-      u_m2_En.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m2_En = u_m2_En.real;
-      offset += sizeof(this->m2_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m3_Period;
-      u_m3_Period.base = 0;
-      u_m3_Period.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_m3_Period.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_m3_Period.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_m3_Period.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->m3_Period = u_m3_Period.real;
-      offset += sizeof(this->m3_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m3_Dir;
-      u_m3_Dir.base = 0;
-      u_m3_Dir.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m3_Dir = u_m3_Dir.real;
-      offset += sizeof(this->m3_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m3_En;
-      u_m3_En.base = 0;
-      u_m3_En.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m3_En = u_m3_En.real;
-      offset += sizeof(this->m3_En);
-      union {
-        float real;
-        uint32_t base;
-      } u_m4_Period;
-      u_m4_Period.base = 0;
-      u_m4_Period.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_m4_Period.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_m4_Period.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_m4_Period.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->m4_Period = u_m4_Period.real;
-      offset += sizeof(this->m4_Period);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m4_Dir;
-      u_m4_Dir.base = 0;
-      u_m4_Dir.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m4_Dir = u_m4_Dir.real;
-      offset += sizeof(this->m4_Dir);
-      union {
-        bool real;
-        uint8_t base;
-      } u_m4_En;
-      u_m4_En.base = 0;
-      u_m4_En.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->m4_En = u_m4_En.real;
-      offset += sizeof(this->m4_En);
+      } u_Eni;
+      u_Eni.base = 0;
+      u_Eni.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->En[i] = u_Eni.real;
+      offset += sizeof(this->En[i]);
+      }
       union {
         bool real;
         uint8_t base;
@@ -288,7 +117,7 @@ namespace rovus_bras
     }
 
     virtual const char * getType() override { return "rovus_bras/vitesse_moteur_msg"; };
-    virtual const char * getMD5() override { return "7cd4f6c3688597f156ba88462afe6362"; };
+    virtual const char * getMD5() override { return "885790d6c4fd237460d5105af99e556c"; };
 
   };
 
