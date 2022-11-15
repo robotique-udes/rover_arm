@@ -1,0 +1,5 @@
+float64[4] angles
+float64[4] cmd
+---
+float64[4] vitesses
+bool singularMatrix

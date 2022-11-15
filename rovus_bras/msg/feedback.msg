@@ -14,3 +14,4 @@ int8 current_joint
 float32 speed_multiplier
 bool limiteur
 bool calibration
+bool kinetics_calc_error

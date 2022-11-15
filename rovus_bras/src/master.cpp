@@ -7,6 +7,7 @@
 #include "sensor_msgs/Joy.h"
 #include <string> 
 #include <sstream>
+#include "rovus_bras/diffKinematicsCalc.h"
 
 // _______________________________________________________________
 // Declarations and prototypes
@@ -21,6 +22,7 @@ void angleMsgCallback(const rovus_bras::angle::ConstPtr& data);
 void joyMsgCallback(const sensor_msgs::Joy::ConstPtr& data);
 void guiCmdCallback(const rovus_bras::arm_gui_cmd::ConstPtr& data);
 void calculateSpeedJoint();
+void calculateSpeedCartesian();
 void assembleAndSendArduinoMsg();
 void assembleAndSendFeedbackMsg();
 
@@ -59,6 +61,7 @@ class Controller
         float vx = 0.0;
         float vy = 0.0;
         float vz = 0.0;
+        float va = 0.0;
 
         bool joint_mode_toggle = 0;
         int joint_change = 0;
@@ -81,12 +84,17 @@ const float BASE_SPEED = 10;
 const jogModes DEFAULT_JOG_MODE = joint;
 const float SPEED_INCREMENT= 0.1;
 
+//Variables globales
+bool singularMatrix_flag = false;
+bool kineticsCalcError = false;
+
 //Objets globaux
 ros::Publisher pub_moteur;
 ros::Publisher pub_feedback;
 ros::Subscriber sub_angle;
 ros::Subscriber sub_input;
 ros::Subscriber sub_arm_gui_cmd;
+ros::ServiceClient client_diff_kinetics_calc;
 
 Moteur moteurs[NOMBRE_MOTEUR];
 Controller input;
@@ -113,6 +121,7 @@ void init()
     sub_angle = n.subscribe("valeurAngles", 5, angleMsgCallback);
     sub_input = n.subscribe("joy", 5, joyMsgCallback);
     sub_arm_gui_cmd = n.subscribe("arm_gui_cmd", 5, guiCmdCallback);
+    client_diff_kinetics_calc = n.serviceClient<rovus_bras::diffKinematicsCalc>("diff_kinematics_calc");
 }
 
 void loop()
@@ -165,7 +174,13 @@ void runningLoop()
         }
         case cartesian:
         {
+            calculateSpeedCartesian();
 
+            if (singularMatrix_flag)
+            {
+                for(int i = 0; i < NOMBRE_MOTEUR; i++)
+                    moteurs[i].setPeriod(0);
+            }
         }
     }
     assembleAndSendArduinoMsg();
@@ -230,6 +245,11 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
     if (input.speed_increase < 0)
         input.speed_multiplier -= SPEED_INCREMENT;
 
+    input.vx = -input.vx*input.speed_multiplier;
+    input.vy = input.vy*input.speed_multiplier;
+    input.vz = -input.vz*input.speed_multiplier;
+    input.va = (input.lt-input.rt)*input.speed_multiplier;
+
     //ROS_INFO("%d", input.joint_current);
 }
 
@@ -291,16 +311,38 @@ void assembleAndSendFeedbackMsg()
     msg.speed_multiplier = input.speed_multiplier;
     msg.limiteur = 0;
     msg.calibration = 0;
+    msg.singular_matrix = singularMatrix_flag;
+    msg.kinetics_calc_error = kineticsCalcError;
 
     pub_feedback.publish(msg);
 }
 
+void calculateSpeedCartesian()
+{
+    rovus_bras::diffKinematicsCalc srv;
 
+    for(int i = 0; i < NOMBRE_MOTEUR; i++)
+        srv.request.angles[i] = moteurs[i].getAngle();
 
+    srv.request.cmd[0]=input.vx;
+    srv.request.cmd[1]=input.vy;
+    srv.request.cmd[2]=input.vz;
+    srv.request.cmd[3]=input.va;
 
+    if (client_diff_kinetics_calc.call(srv))
+    {
+        singularMatrix_flag = srv.response.singularMatrix;
 
+        for(int i = 0; i < NOMBRE_MOTEUR; i++)
+            moteurs[i].setPeriod(srv.response.vitesses[i]);
 
+        kineticsCalcError = 0;
 
+        ROS_INFO("I received : j1:%f, j2:%f, j3: %f, j4:%f", srv.response.vitesses[0], srv.response.vitesses[1], srv.response.vitesses[2], srv.response.vitesses[3]);
+    }
+    else
+        kineticsCalcError = 1;
+}
 
 
 

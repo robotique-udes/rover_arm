@@ -56,12 +56,11 @@ add_message_files(
   arm_gui_cmd.msg
 )
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+# Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  diffKinematicsCalc.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -131,7 +130,6 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/rovus_bras.cpp
 # )
-# add_library(rovus_bras include/moteur/Moteur.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -180,7 +178,7 @@ catkin_install_python(PROGRAMS
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
+# install(TARGETS ${PROJECT_NAME} moteur alglib-cpp
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
