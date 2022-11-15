@@ -74,17 +74,17 @@ void loop()
 //Fonctions
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
-    j1.getPeriod(msg.m1_Period);
-    j1.getDir(msg.m1_Dir);
+    j1.getPeriod(msg.Period[0]);
+    j1.getDir(msg.Dir[0]);
 
-    j2.getPeriod(msg.m2_Period);
-    j2.getDir(msg.m2_Dir);
+    j2.getPeriod(msg.Period[1]);
+    j2.getDir(msg.Dir[1]);
 
-    j3.getPeriod(msg.m3_Period);
-    j3.getDir(msg.m3_Dir);
+    j3.getPeriod(msg.Period[2]);
+    j3.getDir(msg.Dir[2]);
 
-    j4.getPeriod(msg.m4_Period);
-    j4.getDir(msg.m4_Dir);
+    j4.getPeriod(msg.Period[3]);
+    j4.getDir(msg.Dir[3]);
 }
 
 //Publie les valeurs des angles 
@@ -94,10 +94,10 @@ void sendMsg()
     if (millis() - prev_millis_Callback > CLOCK_CALLBACK)
     {
         rovus_bras::angle msg;
-        msg.j1 = j1.getAngle();
-        msg.j2 = j2.getAngle();
-        msg.j3 = j3.getAngle();
-        msg.j4 = j4.getAngle();
+        msg.angle[0] = j1.getAngle();
+        msg.angle[1] = j2.getAngle();
+        msg.angle[2] = j3.getAngle();
+        msg.angle[3] = j4.getAngle();
         pub.publish(&msg);
         n.spinOnce();
  

@@ -21,13 +21,17 @@ pi = 3.14159265359
 debounce_time = 400 #for toggles in msec
 fine_coarse_toggle = 0 # 0: toggle for coarse | 1: toggle for fine mean
 nb_joint = 4 #Set le nombre de joint total du robot 
-speed_increment = 0.01 #en deg/s
+speed_increment = 0.1 #en deg/s
 speed_base = 10 #en deg/s
 vitesse_maximal = 20 #deg/s**
 DEAD_ZONE = 0.25
+MSG_PERIOD = 0.15 #s
+
+#Timers
+fdbkTimer_prevMillis = 0
 
 #------------------------------------------------------------------------------------
-#Classes globales
+#Classes
 class controller():
     a = 0
     b = 0
@@ -60,7 +64,7 @@ class ctrl_mouvement():
     z = 0
     y = 0
     a = 0
-    
+
 controller_1 = controller()
 #mem_controller_1 = controller()
 v = ctrl_mouvement()
@@ -97,38 +101,31 @@ def calcul_vitesse(robot, axe):
     J4y = 0.25
     J4z = 0.0
 
-    # l1 = 0.7
-    # l2 = 1.5
-    # l3 = 2
-    # l4 = 0.5
-
-
     #Initialisation de la jacobienne
-    
-    # X = J1x*m.cos(q1) + m.sin(q1)*(J1z+J2z) + m.sin(q1)*(J3z+J4z) + J2x*m.cos(q1)*m.cos(q2) + J3x*m.cos(q1)*m.cos(q2+q3) + J4x*m.cos(q1)*m.cos(q2+q4) - J2y*m.sin(q2)*m.cos(q1) - J3y*m.cos(q1)*m.sin(q2+q3) - J4y*m.cos(q1)*m.sin(q2+q4)
+
+    #EqCinematique X = J1x*m.cos(q1) + m.sin(q1)*(J1z+J2z) + m.sin(q1)*(J3z+J4z) + J2x*m.cos(q1)*m.cos(q2) + J3x*m.cos(q1)*m.cos(q2+q3) + J4x*m.cos(q1)*m.cos(q2+q4) - J2y*m.sin(q2)*m.cos(q1) - J3y*m.cos(q1)*m.sin(q2+q3) - J4y*m.cos(q1)*m.sin(q2+q4)
     x_1 = J1x*-m.sin(q1) + m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2x*-m.sin(q1)*m.cos(q2) + J3x*-m.sin(q1)*m.cos(q2+q3) + J4x*-m.sin(q1)*m.cos(q2+q4) - J2y*m.sin(q2)*-m.sin(q1) - J3y*-m.sin(q1)*m.sin(q2+q3) - J4y*-m.sin(q1)*m.sin(q2+q4)
     x_2 = J2x*m.cos(q1)*-m.sin(q2) + J3x*m.cos(q1)*-m.sin(q2+q3) + J4x*m.cos(q1)*-m.sin(q2+q4) - J2y*m.cos(q2)*m.cos(q1) - J3y*m.cos(q1)*m.cos(q2+q3) - J4y*m.cos(q1)*m.cos(q2+q4)
     x_3 = J3x*m.cos(q1)*-m.sin(q2+q3) - J3y*m.cos(q1)*m.cos(q2+q3)
     x_4 = J4x*m.cos(q1)*-m.sin(q2+q4) - J4y*m.cos(q1)*m.cos(q2+q4)
 
-    # Y = J1y + J2x*m.sin(q2) + J2y*m.cos(q2) + J3x*m.sin(q2+q3) + J3y*m.cos(q2+q3) + J4x*m.sin(q2+q4) + J4y*m.cos(q2+q4)
+    #EqCinematique Y = J1y + J2x*m.sin(q2) + J2y*m.cos(q2) + J3x*m.sin(q2+q3) + J3y*m.cos(q2+q3) + J4x*m.sin(q2+q4) + J4y*m.cos(q2+q4)
     y_1 = 0
     y_2 = J2x*m.cos(q2) + J2y*-m.sin(q2) + J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3) + J4x*m.cos(q2+q4) + J4y*-m.sin(q2+q4)
     y_3 = J3x*m.cos(q2+q3) + J3y*-m.sin(q2+q3)
     y_4 = J4x*m.cos(q2+q4) + J4y*-m.sin(q2+q4)
 
-    # Z = m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2y*m.sin(q1)*m.sin(q2) + J3y*m.sin(q1)*m.sin(q2+q3) + J4y*m.sin(q1)*m.sin(q2+q4) - J1x*m.sin(q1) - J2x*m.sin(q1)*m.cos(q2) - J3x*m.sin(q1)*m.cos(q2+q3) - J4x*m.sin(q1)*m.cos(q2+q4)
+    #EqCinematique Z = m.cos(q1)*(J1z+J2z) + m.cos(q1)*(J3z+J4z) + J2y*m.sin(q1)*m.sin(q2) + J3y*m.sin(q1)*m.sin(q2+q3) + J4y*m.sin(q1)*m.sin(q2+q4) - J1x*m.sin(q1) - J2x*m.sin(q1)*m.cos(q2) - J3x*m.sin(q1)*m.cos(q2+q3) - J4x*m.sin(q1)*m.cos(q2+q4)
     z_1 = -m.sin(q1)*(J1z+J2z) + -m.sin(q1)*(J3z+J4z) + J2y*m.cos(q1)*m.sin(q2) + J3y*m.cos(q1)*m.sin(q2+q3) + J4y*m.cos(q1)*m.sin(q2+q4) - J1x*m.cos(q1) - J2x*m.cos(q1)*m.cos(q2) - J3x*m.cos(q1)*m.cos(q2+q3) - J4x*m.cos(q1)*m.cos(q2+q4)
     z_2 = J2y*m.sin(q1)*m.cos(q2) + J3y*m.sin(q1)*m.cos(q2+q3) + J4y*m.sin(q1)*m.cos(q2+q4) - J2x*m.sin(q1)*-m.sin(q2) - J3x*m.sin(q1)*-m.sin(q2+q3) - J4x*m.sin(q1)*-m.sin(q2+q4)
     z_3 = J3y*m.sin(q1)*m.cos(q2+q3) - J3x*m.sin(q1)*-m.sin(q2+q3)
     z_4 = J4y*m.sin(q1)*m.cos(q2+q4) - J4x*m.sin(q1)*-m.sin(q2+q4)
 
-    # a = q2+q4
+    #EqCinematique a(angle effecteur) = q2+q4
     a_1 = 0
     a_2 = 1
     a_3 = 0
     a_4 = 1
-
 
     j = np.array([[x_1, x_2, x_3, x_4],
                 [y_1, y_2, y_3, y_4],
@@ -146,7 +143,8 @@ def angle_deg(rad):
     deg=rad*180/pi
     return deg
 
-def axes():
+#get controller inputs and multiply by a factor
+def getAndScaleInputs():
     v.x = -controller_1.vx*controller_1.speed_multiplier
     v.y = controller_1.vy*controller_1.speed_multiplier
     v.z = -controller_1.vz*controller_1.speed_multiplier
@@ -200,7 +198,6 @@ def getDir(m: Stepper):
         m.dir = False
     else:
         m.dir = True
-
         
 #------------------------------------------------------------------------------------
 def joy_callback(Joy: Joy):
@@ -257,6 +254,7 @@ def joy_callback(Joy: Joy):
         controller_1.speed_multiplier-=speed_increment
 
 def angle_callback(angle: angle):
+    global fdbkTimer_prevMillis
     #Définir type de message
 
     cmd = vitesse_moteur_msg()
@@ -274,12 +272,14 @@ def angle_callback(angle: angle):
 
         if not controller_1.joint_mode:
             #Calcul des vitesses moteurs et publier au topic           
+            
             bras = np.array([[angle_rad(angle.j1)],
                             [angle_rad(angle.j2)],
                             [angle_rad(angle.j3)],
                             [angle_rad(angle.j4)]])
             
-            axes() #transfere les inputs par un facteur
+            getAndScaleInputs()
+            
             ctrl = np.array([[v.x],
                             [v.y],
                             [v.z],
@@ -341,7 +341,12 @@ def angle_callback(angle: angle):
     fdbk.current_joint = controller_1.joint_current
     fdbk.speed_multiplier = controller_1.speed_multiplier
 
-    pub_feedback.publish(fdbk)
+    if time() - fdbkTimer_prevMillis > MSG_PERIOD:
+        pub_feedback.publish(fdbk)
+        fdbkTimer_prevMillis = time()
+
+
+def time(): return rospy.get_time()
 
 #------------------------------------------------------------------------------------
 if __name__=='__main__':

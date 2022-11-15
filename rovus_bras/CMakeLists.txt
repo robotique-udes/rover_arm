@@ -53,14 +53,14 @@ add_message_files(
   feedback.msg
   vitesse_moteur_msg.msg
   angle.msg
+  arm_gui_cmd.msg
 )
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+# Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  diffKinematicsCalc.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -111,8 +111,8 @@ catkin_package(
 # catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES rovus_bras
-#  CATKIN_DEPENDS roscpp rospy
-#  DEPENDS system_lib
+#  #CATKIN_DEPENDS roscpp rospy
+#  #DEPENDS system_lib
 # )
 
 ###########
@@ -121,12 +121,12 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(
-# include
-#   ${catkin_INCLUDE_DIRS}
-# )
+include_directories(
+ include
+  ${catkin_INCLUDE_DIRS}
+)
 
-## Declare a C++ library
+# Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/rovus_bras.cpp
 # )
@@ -178,7 +178,7 @@ catkin_install_python(PROGRAMS
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
+# install(TARGETS ${PROJECT_NAME} moteur alglib-cpp
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -209,3 +209,8 @@ install(FILES
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(master_cpp src/master.cpp)
+target_link_libraries(master_cpp ${catkin_LIBRARIES})
+
+
