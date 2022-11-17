@@ -1,8 +1,6 @@
-#ifndef MOTEUR_H
-#define MOTEUR_H
+#pragma once
 
-#include "Moteur.cpp"
-
+// Classes
 class Moteur
 {
     private:
@@ -12,8 +10,6 @@ class Moteur
         bool dir = 0;
 
     public:
-        Moteur();
-        ~Moteur();
         void setAngle(float iAngle);
         float getAngle();
 
@@ -23,8 +19,5 @@ class Moteur
         void setEnable(bool iEnable);
         float getEnable();
 
-        void setDir(bool iEnable);
         float getDir();
 };
-
-#endif

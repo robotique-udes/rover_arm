@@ -8,6 +8,7 @@
 #include <string> 
 #include <sstream>
 #include "rovus_bras/diffKinematicsCalc.h"
+#include "moteur/Moteur.h"
 
 // _______________________________________________________________
 // Declarations and prototypes
@@ -27,27 +28,27 @@ void assembleAndSendArduinoMsg();
 void assembleAndSendFeedbackMsg();
 
 
-// Classes
-class Moteur
-{
-    private:
-        float angle = 0.0;
-        float period = 0.0;
-        bool enable = true;
-        bool dir = 0;
+// // Classes
+// class Moteur
+// {
+//     private:
+//         float angle = 0.0;
+//         float period = 0.0;
+//         bool enable = true;
+//         bool dir = 0;
 
-    public:
-        void setAngle(float iAngle) {angle = iAngle;}
-        float getAngle() {return angle;}
+//     public:
+//         void setAngle(float iAngle) {angle = iAngle;}
+//         float getAngle() {return angle;}
 
-        void setPeriod(float iPeriod) {period = iPeriod;}
-        float getPeriod() {return period;}
+//         void setPeriod(float iPeriod) {period = iPeriod;}
+//         float getPeriod() {return period;}
 
-        void setEnable(bool iEnable) {enable = iEnable;}
-        float getEnable() {return enable;}
+//         void setEnable(bool iEnable) {enable = iEnable;}
+//         float getEnable() {return enable;}
 
-        float getDir() {return period>0? 1: 0;}
-};
+//         float getDir() {return period>0? 1: 0;}
+// };
 class Controller
 {
     public:
@@ -343,30 +344,3 @@ void calculateSpeedCartesian()
     else
         kineticsCalcError = 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

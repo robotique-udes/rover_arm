@@ -1,4 +1,4 @@
-#include "Moteur.h"
+#include "moteur/Moteur.h"
 
 void Moteur::setAngle(float iAngle) {angle = iAngle;}
 float Moteur::getAngle() {return angle;}
@@ -9,5 +9,4 @@ float Moteur::getPeriod() {return period;}
 void Moteur::setEnable(bool iEnable) {enable = iEnable;}
 float Moteur::getEnable() {return enable;}
 
-void Moteur::setDir(bool iEnable) {enable = iEnable;}
-float Moteur::getDir() {return enable;}
+float Moteur::getDir() {return (period > 0) ? 1 : 0;}
