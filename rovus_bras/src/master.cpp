@@ -8,10 +8,9 @@
 #include <string> 
 #include <sstream>
 #include "rovus_bras/diffKinematicsCalc.h"
-#include "moteur/Moteur.h"
 
 // _______________________________________________________________
-// Declarations and prototypes
+
 // Fonctions prototypes
 void init();
 void loop();
@@ -26,29 +25,28 @@ void calculateSpeedJoint();
 void calculateSpeedCartesian();
 void assembleAndSendArduinoMsg();
 void assembleAndSendFeedbackMsg();
+void speedLimiter(boost::array<double, 4UL> vitesse);
 
+class Moteur
+{
+    private:
+        float angle = 0.0;
+        float period = 0.0;
+        bool enable = true;
+        bool dir = 0;
 
-// // Classes
-// class Moteur
-// {
-//     private:
-//         float angle = 0.0;
-//         float period = 0.0;
-//         bool enable = true;
-//         bool dir = 0;
+    public:
+        void setAngle(float iAngle) {angle = iAngle;}
+        float getAngle() {return angle;}
 
-//     public:
-//         void setAngle(float iAngle) {angle = iAngle;}
-//         float getAngle() {return angle;}
+        void setPeriod(float iPeriod) {period = iPeriod;}
+        float getPeriod() {return period;}
 
-//         void setPeriod(float iPeriod) {period = iPeriod;}
-//         float getPeriod() {return period;}
+        void setEnable(bool iEnable) {enable = iEnable;}
+        float getEnable() {return enable;}
 
-//         void setEnable(bool iEnable) {enable = iEnable;}
-//         float getEnable() {return enable;}
-
-//         float getDir() {return period>0? 1: 0;}
-// };
+        float getDir() {return (period > 0) ? 1 : 0;}
+};
 class Controller
 {
     public:
@@ -78,12 +76,13 @@ enum states{standby, running, hold, calibration};
 enum jogModes{joint, cartesian};
 
 //_______________________________________________________________
-//Cosntantes/Variables/etc.
+
 //Constantes
 const int NOMBRE_MOTEUR = 4;
 const float BASE_SPEED = 10;
 const jogModes DEFAULT_JOG_MODE = joint;
 const float SPEED_INCREMENT= 0.1;
+const float VITESSE_MAX = 20.0; // en deg/s
 
 //Variables globales
 bool singularMatrix_flag = false;
@@ -107,7 +106,6 @@ states currentState = running;
 //_______________________________________________________________
 int main(int argc, char* argv[])
 {
-
     ros::init(argc, argv, "master");
 
     init();
@@ -177,11 +175,11 @@ void runningLoop()
         {
             calculateSpeedCartesian();
 
-            if (singularMatrix_flag)
-            {
-                for(int i = 0; i < NOMBRE_MOTEUR; i++)
-                    moteurs[i].setPeriod(0);
-            }
+            // if (singularMatrix_flag)
+            // {
+            //     for(int i = 0; i < NOMBRE_MOTEUR; i++)
+            //         moteurs[i].setPeriod(0);
+            // }
         }
     }
     assembleAndSendArduinoMsg();
@@ -212,6 +210,11 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
     input.vx = -data->axes[1];
     input.vy = data->axes[4];
     input.vz = data->axes[0];
+
+    input.vx = -input.vx*input.speed_multiplier;
+    input.vy = input.vy*input.speed_multiplier;
+    input.vz = -input.vz*input.speed_multiplier;
+    input.va = (input.lt-input.rt)*input.speed_multiplier;
 
     input.calibration_button = data->buttons[12];
 
@@ -245,13 +248,6 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
         input.speed_multiplier += SPEED_INCREMENT;
     if (input.speed_increase < 0)
         input.speed_multiplier -= SPEED_INCREMENT;
-
-    input.vx = -input.vx*input.speed_multiplier;
-    input.vy = input.vy*input.speed_multiplier;
-    input.vz = -input.vz*input.speed_multiplier;
-    input.va = (input.lt-input.rt)*input.speed_multiplier;
-
-    //ROS_INFO("%d", input.joint_current);
 }
 
 void guiCmdCallback(const rovus_bras::arm_gui_cmd::ConstPtr& data) 
@@ -299,18 +295,21 @@ void assembleAndSendArduinoMsg()
 void assembleAndSendFeedbackMsg()
 {
     rovus_bras::feedback msg;
-    
+
+    msg.limiteur = 0;
+
     for( int i=0; i<sizeof(moteurs)/sizeof(Moteur); i++)
     {
         msg.angles[i] = moteurs[i].getAngle();
         msg.vitesses[i] = moteurs[i].getPeriod();
         msg.enable[i] = moteurs[i].getEnable();
+        if(moteurs[i].getPeriod() == VITESSE_MAX)
+            msg.limiteur = 1;
     }
 
     msg.ctrl_mode = (jogMode == joint? 1: 0);
     msg.current_joint = input.joint_current;
     msg.speed_multiplier = input.speed_multiplier;
-    msg.limiteur = 0;
     msg.calibration = 0;
     msg.singular_matrix = singularMatrix_flag;
     msg.kinetics_calc_error = kineticsCalcError;
@@ -321,26 +320,55 @@ void assembleAndSendFeedbackMsg()
 void calculateSpeedCartesian()
 {
     rovus_bras::diffKinematicsCalc srv;
+    bool limiting_flag = 0;
 
-    for(int i = 0; i < NOMBRE_MOTEUR; i++)
-        srv.request.angles[i] = moteurs[i].getAngle();
-
-    srv.request.cmd[0]=input.vx;
-    srv.request.cmd[1]=input.vy;
-    srv.request.cmd[2]=input.vz;
-    srv.request.cmd[3]=input.va;
-
-    if (client_diff_kinetics_calc.call(srv))
+    if(input.vx != 0.0 || input.vy !=0.0 || input.vz != 0.0 || input.va != 0.0)
     {
-        singularMatrix_flag = srv.response.singularMatrix;
-
         for(int i = 0; i < NOMBRE_MOTEUR; i++)
-            moteurs[i].setPeriod(srv.response.vitesses[i]);
+            srv.request.angles[i] = moteurs[i].getAngle();
 
-        kineticsCalcError = 0;
+        srv.request.cmd[0]=input.vx;
+        srv.request.cmd[1]=input.vy;
+        srv.request.cmd[2]=input.vz;
+        srv.request.cmd[3]=input.va;
 
-        ROS_INFO("I received : j1:%f, j2:%f, j3: %f, j4:%f", srv.response.vitesses[0], srv.response.vitesses[1], srv.response.vitesses[2], srv.response.vitesses[3]);
+        if (client_diff_kinetics_calc.call(srv))
+        {
+            singularMatrix_flag = srv.response.singularMatrix;
+            for(int i=0; i<NOMBRE_MOTEUR; i++)
+            {
+                if (std::abs(srv.response.vitesses[i]>20))
+                    limiting_flag = 1;
+            }
+
+            if (limiting_flag)
+                speedLimiter(srv.response.vitesses);
+            else
+                for(int i = 0; i < NOMBRE_MOTEUR; i++)
+                    moteurs[i].setPeriod(srv.response.vitesses[i]);
+
+            kineticsCalcError = 0;
+        }
+        else
+            kineticsCalcError = 1;
     }
     else
-        kineticsCalcError = 1;
+        for(int i=0; i<NOMBRE_MOTEUR; i++)
+            moteurs[i].setPeriod(0.0);
+}
+
+void speedLimiter(boost::array<double, 4UL> vitesse)
+{
+    float vitesseLaPlusGrande = std::abs(vitesse[0]);
+
+    for(int i=1; i<NOMBRE_MOTEUR; i++)
+    {
+        if (std::abs(vitesse[i]) > vitesseLaPlusGrande)
+            vitesseLaPlusGrande = std::abs(vitesse[i]);
+    }
+
+    float facteurLimitant = VITESSE_MAX/vitesseLaPlusGrande;
+    
+    for(int i=0; i<NOMBRE_MOTEUR; i++)
+        moteurs[i].setPeriod(vitesse[i]*facteurLimitant);
 }

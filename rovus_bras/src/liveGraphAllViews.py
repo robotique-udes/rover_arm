@@ -141,10 +141,10 @@ def angle_callback(angle: angle):
     global q2
     global q3
     global q4
-    q1 = angle.j1*pi/180
-    q2 = angle.j2*pi/180
-    q3 = angle.j3*pi/180
-    q4 = angle.j4*pi/180
+    q1 = angle.angle[0]*pi/180
+    q2 = angle.angle[1]*pi/180
+    q3 = angle.angle[2]*pi/180
+    q4 = angle.angle[3]*pi/180
 
 if __name__=='__main__':
     main()
