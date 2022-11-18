@@ -12,6 +12,7 @@ class Stepper
         short SWITCH;
         short DIR;
         short PUL;
+        short EN;
         float STEPS_REV;
         float GEARBOX;
         float STEPS_DEG;
@@ -33,6 +34,7 @@ class Stepper
         int iSwitchAngle /*siwtch angle*/,
         short iDirPin /*DIR pin*/,
         short iPulPin /*PUL pin*/,
+        short iEnPin /*Enable pin*/,
         float iStepPerDeg /*Step per rev*/,
         float iGearboxRation /*Gearbox ratio*/,
         bool  iDirCalib  /*Direction de la calibration (1 ou 0)*/,
@@ -47,6 +49,7 @@ class Stepper
 
         bool getFlagCalib() {return flagCalib;}
         void setFlagCalib(bool value) {flagCalib = value;}
+        void setEnable(bool enState) {digitalWrite(EN, enState);}
 
 };
 

@@ -17,6 +17,6 @@
     <node name="diff_kinetics_calc_server" pkg="rovus_bras" type="diff_kinetics_calc_server.py" />
 
     <!--Lancer le gui rqt-->
-    <node name = "rover_arm_gui" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/>
+    <!-- <node name = "rover_arm_gui" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/> -->
 
 </launch>

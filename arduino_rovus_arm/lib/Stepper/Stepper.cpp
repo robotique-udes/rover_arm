@@ -5,6 +5,7 @@ Stepper::Stepper(short iSwitchPin /*switch pin*/,
         int iSwitchAngle /*siwtch angle*/,
         short iDirPin /*DIR pin*/,
         short iPulPin /*PUL pin*/,
+        short iEnPin /*Enable pin*/,
         float iStepPerDeg /*Step per rev*/,
         float iGearboxRation /*Gearbox ratio*/,
         bool  iDirCalib  /*Direction de la calibration (1 ou 0)*/,
@@ -14,6 +15,7 @@ Stepper::Stepper(short iSwitchPin /*switch pin*/,
         SWITCH_STEP = iSwitchAngle*STEPS_DEG;
         DIR = iDirPin;
         PUL = iPulPin;
+        EN = iEnPin;
         STEPS_REV = iStepPerDeg;
         GEARBOX = iGearboxRation;
         STEP_CALIB = iAngleCalib;
@@ -25,8 +27,8 @@ Stepper::Stepper(short iSwitchPin /*switch pin*/,
         pinMode(DIR, OUTPUT);
         pinMode(PUL, OUTPUT);
         pinMode(SWITCH, INPUT);
+        pinMode(EN, OUTPUT);
 }
-
 
 
 void Stepper::getPeriod(float msg)
