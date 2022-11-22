@@ -122,3 +122,8 @@ bool Stepper::getdir_calib()
 
 	return dir;
 }
+
+void Stepper::setEnable(bool enState) 
+{
+    digitalWrite(EN, enState);
+}

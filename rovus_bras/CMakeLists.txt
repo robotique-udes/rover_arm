@@ -49,6 +49,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
+  DIRECTORY 
+  msg 
   FILES
   feedback.msg
   vitesse_moteur_msg.msg
@@ -58,6 +60,8 @@ add_message_files(
 
 # Generate services in the 'srv' folder
 add_service_files(
+  DIRECTORY 
+  srv
   FILES
   diffKinematicsCalc.srv
 )
@@ -122,7 +126,6 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -211,3 +214,4 @@ install(FILES
 
 add_executable(master_cpp src/master.cpp)
 target_link_libraries(master_cpp ${catkin_LIBRARIES})
+add_dependencies(master_cpp rovus_bras_generate_messages_cpp)

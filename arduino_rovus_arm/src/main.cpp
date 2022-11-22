@@ -19,7 +19,11 @@ void armCalibration();
 //Variables et constantes globales :
 enum States {standby, running, calibration};
 States state;
+
 const int NB_STEPPER = 4;
+const bool ENABLE = 1;
+const bool DISABLE = 0;
+
 bool flagCalib = 0;
 
 //callback timer's var
@@ -31,6 +35,8 @@ Stepper j1(21, 0, 30, 2, 69, 1600.0, 77.0, 1, 30.0);
 Stepper j2(21, 0, 32, 3, 69, 1600.0, 150.0, 1, 20.0);
 Stepper j3(21, 0, 34, 4, 69, 1600.0, 100.0, 1, 0.0);
 Stepper j4(21, 0, 8, 9, 69, 1600.0, 100.0, 1, 0.0);
+
+Stepper steppers[4] = {j1, j2, j3, j4};
 
 //__________________________________________________________________________________________
 //ROS "setup/init" :
@@ -57,36 +63,32 @@ void loop()
 {
     sendMsg();
 
-    switch (state)
-    {
+    switch(state)
+    {   
         case standby:
-            //All motor Disable
+            //nothing
             break;
-        
         case running:
             stepMoteurs();
+            break;
 
         case calibration:
             armCalibration();
+            break;
     }
 
-    Stepper
 }
+
 //__________________________________________________________________________________________
 //Fonctions
 void callback(const rovus_bras::vitesse_moteur_msg &msg)
 {
-    j1.getPeriod(msg.Period[0]);
-    j1.getDir(msg.Dir[0]);
-
-    j2.getPeriod(msg.Period[1]);
-    j2.getDir(msg.Dir[1]);
-
-    j3.getPeriod(msg.Period[2]);
-    j3.getDir(msg.Dir[2]);
-
-    j4.getPeriod(msg.Period[3]);
-    j4.getDir(msg.Dir[3]);
+    for(unsigned int i=0; i<sizeof(steppers)/sizeof(Stepper); i++)
+    {
+        steppers[i].setEnable(msg.En[i]);
+        steppers[i].getPeriod(msg.Period[i]);
+        steppers[i].getDir(msg.Dir[i]);
+    }
 }
 
 //Publie les valeurs des angles 

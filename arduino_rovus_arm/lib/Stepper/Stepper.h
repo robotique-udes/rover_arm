@@ -49,7 +49,7 @@ class Stepper
 
         bool getFlagCalib() {return flagCalib;}
         void setFlagCalib(bool value) {flagCalib = value;}
-        void setEnable(bool enState) {digitalWrite(EN, enState);}
+        void setEnable(bool enState);
 
 };
 

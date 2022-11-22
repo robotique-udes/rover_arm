@@ -83,6 +83,8 @@ const float BASE_SPEED = 10;
 const jogModes DEFAULT_JOG_MODE = joint;
 const float SPEED_INCREMENT= 0.1;
 const float VITESSE_MAX = 20.0; // en deg/s
+const bool ENABLE = 1;
+const bool DISABLE = 0;
 
 //Variables globales
 bool singularMatrix_flag = false;
@@ -141,18 +143,14 @@ void loop()
                 break;
             }
 
-            case hold:
-            {
-                holdLoop();
-                break;
-            }
-
             case calibration:
             {
                 calibrationLoop();
                 break;
             }
         }
+        assembleAndSendArduinoMsg();
+        assembleAndSendFeedbackMsg();
         
         ros::Rate loop_rate(50);
         ros::spinOnce();
@@ -160,7 +158,16 @@ void loop()
     }
 }
 
-void standbyLoop(){}
+void standbyLoop()
+{
+    //TODO
+    //Go to StanbyPosition
+
+    for(int i=0; i<NOMBRE_MOTEUR; i++)
+    {
+        moteurs[i].setEnable(DISABLE);
+    }
+}
 
 void runningLoop()
 {
@@ -174,19 +181,10 @@ void runningLoop()
         case cartesian:
         {
             calculateSpeedCartesian();
-
-            // if (singularMatrix_flag)
-            // {
-            //     for(int i = 0; i < NOMBRE_MOTEUR; i++)
-            //         moteurs[i].setPeriod(0);
-            // }
+            break;
         }
     }
-    assembleAndSendArduinoMsg();
-    assembleAndSendFeedbackMsg();
 }
-
-void holdLoop(){}
 
 void calibrationLoop(){}
 
@@ -252,6 +250,10 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
 
 void guiCmdCallback(const rovus_bras::arm_gui_cmd::ConstPtr& data) 
 {
+    currentState = data->state == 0? standby: currentState;
+    currentState = data->state == 1? running: currentState;
+    currentState = data->state == 2? calibration: currentState;
+
     for(int i=0; i < sizeof(moteurs)/sizeof(Moteur); i++)
     {
         moteurs[i].setEnable(data->enable[i]);
