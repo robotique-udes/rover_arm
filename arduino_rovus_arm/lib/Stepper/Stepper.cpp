@@ -31,26 +31,33 @@ Stepper::Stepper(short iSwitchPin /*switch pin*/,
 }
 
 
-void Stepper::getPeriod(float msg)
+void Stepper::setPeriod(float msg)
 {
-    if (msg == 0)
-        period = 0;
-    else
-        period = 1000000/((abs(msg) * STEPS_DEG));
+    period = abs(msg)/STEPS_DEG;
 }
 
-void Stepper::getDir(bool msg)
+void Stepper::setDir(bool msg)
 {
     dir = msg;
 }
 
 void Stepper::doStep()
 {
-    dir? digitalWrite(DIR, HIGH): digitalWrite(DIR, LOW);
+    if (dir)
+    {
+        digitalWrite(DIR, HIGH);
+    }
+    else
+    {
+        digitalWrite(DIR, LOW);
+    }
 
     if ((micros() - prev_micros > (period)) && (period != 0))
     {
-        dir? curr_step += 1: curr_step -= 1;
+        if (dir)
+            curr_step += 1;
+        else
+            curr_step -= 1;
 
         prev_micros = micros();
         digitalWrite(PUL, HIGH);

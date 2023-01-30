@@ -3,32 +3,32 @@
 
 const bool DIR_POSITIF = 0;
 const bool DIR_NEGATIF = 1;
-const float VITESSE_CALIB = 5; //deg/s
-
+const float VITESSE_CALIB = 5; // deg/s
 
 class Stepper
 {
-    private:
-        short SWITCH;
-        short DIR;
-        short PUL;
-        short EN;
-        float STEPS_REV;
-        float GEARBOX;
-        float STEPS_DEG;
+private:
+    short SWITCH;
+    short DIR;
+    short PUL;
+    short EN;
+    float STEPS_REV;
+    float GEARBOX;
+    float STEPS_DEG;
 
-        unsigned long prev_micros = 0;
-        unsigned long period = 0;
-        bool dir = 1;
-        long curr_step = 0;
-        short angle = 0;
-        bool DIR_CALIB = 0;
-        int STEP_CALIB = 8000;
-        short SWITCH_STEP = 0;
-        short state_calib = 0;
-        bool flagCalib = 0;
-        float Angle;
+    unsigned long prev_micros = 0;
+    unsigned long period = 0;
+    bool dir = 1;
+    long curr_step = 0;
+    short angle = 0;
+    bool DIR_CALIB = 0;
+    int STEP_CALIB = 8000;
+    short SWITCH_STEP = 0;
+    short state_calib = 0;
+    bool flagCalib = 0;
+    float Angle;
 
+public:
     public:
         Stepper(short iSwitchPin /*switch pin*/,
         int iSwitchAngle /*siwtch angle*/,
@@ -39,18 +39,19 @@ class Stepper
         float iGearboxRation /*Gearbox ratio*/,
         bool  iDirCalib  /*Direction de la calibration (1 ou 0)*/,
         float   iAngleCalib /*Angle à atteindre après la calib*/);
-        
-        void getPeriod(float msg);
-        void getDir(bool msg);
-        void doStep();
-        float getAngle() {return curr_step/STEPS_DEG;}
-        void calibration();
-        bool getdir_calib();
 
-        bool getFlagCalib() {return flagCalib;}
-        void setFlagCalib(bool value) {flagCalib = value;}
-        void setEnable(bool enState);
+    long getCurrStep() { return curr_step; }
+    void setPeriod(float msg);
+    unsigned long getPeriod() { return period; }
+    void setDir(bool msg);
+    void doStep();
+    float getAngle() { return (float)curr_step / STEPS_DEG; }
+    void calibration();
+    bool getdir_calib();
 
+    bool getFlagCalib() { return flagCalib; }
+    void setFlagCalib(bool value) { flagCalib = value; }
+    void setEnable(bool enState);
 };
 
 #endif

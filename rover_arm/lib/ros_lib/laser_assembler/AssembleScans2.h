@@ -1,18 +1,18 @@
-#ifndef _ROS_SERVICE_AssembleScans_h
-#define _ROS_SERVICE_AssembleScans_h
+#ifndef _ROS_SERVICE_AssembleScans2_h
+#define _ROS_SERVICE_AssembleScans2_h
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "sensor_msgs/PointCloud.h"
 #include "ros/time.h"
+#include "sensor_msgs/PointCloud2.h"
 
 namespace laser_assembler
 {
 
-static const char ASSEMBLESCANS[] = "laser_assembler/AssembleScans";
+static const char ASSEMBLESCANS2[] = "laser_assembler/AssembleScans2";
 
-  class AssembleScansRequest : public ros::Msg
+  class AssembleScans2Request : public ros::Msg
   {
     public:
       typedef ros::Time _begin_type;
@@ -20,7 +20,7 @@ static const char ASSEMBLESCANS[] = "laser_assembler/AssembleScans";
       typedef ros::Time _end_type;
       _end_type end;
 
-    AssembleScansRequest():
+    AssembleScans2Request():
       begin(),
       end()
     {
@@ -78,18 +78,18 @@ static const char ASSEMBLESCANS[] = "laser_assembler/AssembleScans";
      return offset;
     }
 
-    virtual const char * getType() override { return ASSEMBLESCANS; };
+    virtual const char * getType() override { return ASSEMBLESCANS2; };
     virtual const char * getMD5() override { return "b341004f74e15bf5e1b2053a9183bdc7"; };
 
   };
 
-  class AssembleScansResponse : public ros::Msg
+  class AssembleScans2Response : public ros::Msg
   {
     public:
-      typedef sensor_msgs::PointCloud _cloud_type;
+      typedef sensor_msgs::PointCloud2 _cloud_type;
       _cloud_type cloud;
 
-    AssembleScansResponse():
+    AssembleScans2Response():
       cloud()
     {
     }
@@ -108,15 +108,15 @@ static const char ASSEMBLESCANS[] = "laser_assembler/AssembleScans";
      return offset;
     }
 
-    virtual const char * getType() override { return ASSEMBLESCANS; };
-    virtual const char * getMD5() override { return "4217b28a903e4ad7869a83b3653110ff"; };
+    virtual const char * getType() override { return ASSEMBLESCANS2; };
+    virtual const char * getMD5() override { return "96cec5374164b3b3d1d7ef5d7628a7ed"; };
 
   };
 
-  class AssembleScans {
+  class AssembleScans2 {
     public:
-    typedef AssembleScansRequest Request;
-    typedef AssembleScansResponse Response;
+    typedef AssembleScans2Request Request;
+    typedef AssembleScans2Response Response;
   };
 
 }
