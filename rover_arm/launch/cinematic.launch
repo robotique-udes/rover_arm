@@ -17,6 +17,6 @@
     <node name="arm_diff_kinetics_calc_server" pkg="rover_arm" type="diff_kinetics_calc_server.py" />
 
     <!--Lancer le gui rqt-->
-    <node name = "arm_gui" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/>
+    <node name = "arm_gui" pkg = "rqt_gui" type = "rqt_gui" respawn = "true" output = "screen"/>
 
 </launch>

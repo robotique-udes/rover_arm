@@ -88,6 +88,9 @@ enum jogModes
 //_______________________________________________________________
 
 // Constantes
+#define RATE_FEEDBACK 10 //Hz
+#define RATE_ROS 50 //Hz
+
 const int NOMBRE_MOTEUR = 4;
 const float BASE_SPEED = 10;
 const jogModes DEFAULT_JOG_MODE = joint;
@@ -137,6 +140,9 @@ void init()
 
 void loop()
 {
+    ros::Time lastTime;
+
+
     while (ros::ok())
     {
         switch (currentState)
@@ -160,9 +166,14 @@ void loop()
         }
         }
         assembleAndSendArduinoMsg();
-        assembleAndSendFeedbackMsg();
 
-        ros::Rate loop_rate(50);
+        if ((ros::Time::now() - ros::Duration(1.0/RATE_FEEDBACK)) > lastTime)
+        {
+            assembleAndSendFeedbackMsg();
+            lastTime = ros::Time::now();
+        }
+
+        ros::Rate loop_rate(RATE_ROS);
         ros::spinOnce();
         loop_rate.sleep();
     }
