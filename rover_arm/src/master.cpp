@@ -237,7 +237,7 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
 
     input.calibration_button = data->buttons[12];
 
-    input.joint_mode_toggle = data->buttons[8];
+    // input.joint_mode_toggle = data->buttons[8];
 
     input.joint_change = -data->axes[6];
     input.speed_increase = data->axes[7];
@@ -257,10 +257,10 @@ void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
     }
 
     //--------------------------------------------------
-    if (input.joint_mode_toggle && jogMode == joint)
-        jogMode = cartesian;
-    else if (input.joint_mode_toggle && jogMode == cartesian)
-        jogMode = joint;
+    // if (input.joint_mode_toggle && jogMode == joint)
+    //     jogMode = cartesian;
+    // else if (input.joint_mode_toggle && jogMode == cartesian)
+    //     jogMode = joint;
 
     //--------------------------------------------------
     if (input.speed_increase > 0)
@@ -279,6 +279,11 @@ void guiCmdCallback(const rover_arm::arm_gui_cmd::ConstPtr &data)
     {
         moteurs[i].setEnable(data->enable[i]);
     }
+
+    if (data->jog_is_cartesian)
+        jogMode = cartesian;
+    else
+        jogMode = joint;
 }
 
 void calculateSpeedJoint()

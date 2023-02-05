@@ -101,7 +101,7 @@ def handle_diff_kinematics_calc(req):
         resp.singularMatrix = 0;
 
     except Exception:
-        print_exc()
+        rospy.logwarn("Singular matrix, encountered a column of 0 (can't divide by 0), jog in joint to a less critical position")
         resp.vitesses = [0, 0, 0, 0]
         resp.singularMatrix = 1;
 
