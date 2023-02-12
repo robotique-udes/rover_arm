@@ -1,16 +1,12 @@
 <launch>
-
-    <!--Lancer la node du controller-->
-    <!-- <node name="arm_joy_node" pkg="joy" type="joy_node" > -->
-         <!-- <param name="dev" type="string" value="/dev/input/" /> -->
-    <!-- </node> -->
+    <arg name="serialPort" default="/dev/ttyACM0" />
 
     <!-- Lancer la node de cinematiqe inverse-->
     <node name="arm_master" pkg="rover_arm" type="master_cpp" />
 
     <!--Lancer la communication avec l'arduino-->
     <node name="arm_arduino" pkg="rosserial_arduino" type="serial_node.py">
-        <param name="port" value="/dev/ttyACM0"/>
+        <param name="port" value="$(arg serialPort)"/>
     </node>
 
     <!--Lancer le service de calcul en cartésien-->
