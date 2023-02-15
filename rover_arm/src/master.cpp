@@ -26,6 +26,7 @@ void calculateSpeedCartesian();
 void assembleAndSendArduinoMsg();
 void assembleAndSendFeedbackMsg();
 void speedLimiter(boost::array<double, 4UL> vitesse);
+void bindKeybindings(ros::NodeHandle *n);
 
 class Moteur
 {
@@ -70,6 +71,24 @@ public:
     float speed_multiplier = 0.01;
     int speed_increase = 0;
 };
+struct Keybind
+{
+    // Buttons
+    int a;
+    int b;
+    int x;
+    int y;
+    int rt;
+    int lt;
+
+    // axes
+    int left_joystick_up_down;
+    int left_joystick_left_right;
+    int right_joystick_up_down;
+    int right_joystick_left_right;
+    int arrow_up_down;
+    int arrow_left_right;
+} keybind;
 
 // Enum
 enum states
@@ -88,8 +107,8 @@ enum jogModes
 //_______________________________________________________________
 
 // Constantes
-#define RATE_FEEDBACK 10 //Hz
-#define RATE_ROS 50 //Hz
+#define RATE_FEEDBACK 10 // Hz
+#define RATE_ROS 50      // Hz
 
 const int NOMBRE_MOTEUR = 4;
 const float BASE_SPEED = 10;
@@ -136,12 +155,13 @@ void init()
     sub_input = n.subscribe("/arm_joy", 5, joyMsgCallback);
     sub_arm_gui_cmd = n.subscribe("arm_gui_cmd", 5, guiCmdCallback);
     client_diff_kinetics_calc = n.serviceClient<rover_arm::diffKinematicsCalc>("diff_kinematics_calc");
+
+    bindKeybindings(&n);
 }
 
 void loop()
 {
     ros::Time lastTime;
-
 
     while (ros::ok())
     {
@@ -167,7 +187,7 @@ void loop()
         }
         assembleAndSendArduinoMsg();
 
-        if ((ros::Time::now() - ros::Duration(1.0/RATE_FEEDBACK)) > lastTime)
+        if ((ros::Time::now() - ros::Duration(1.0 / RATE_FEEDBACK)) > lastTime)
         {
             assembleAndSendFeedbackMsg();
             lastTime = ros::Time::now();
@@ -219,28 +239,43 @@ void angleMsgCallback(const rover_arm::angle::ConstPtr &data)
 
 void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
 {
-    input.a = data->buttons[0];
-    input.x = data->buttons[1];
-    input.y = data->buttons[2];
-    input.b = data->buttons[3];
-    input.lt = data->buttons[4];
-    input.rt = data->buttons[5];
+    /*Params :
+    buttons:
+    a
+    b
+    x
+    y
+    lt
+    rt
 
-    input.vx = -data->axes[1];
-    input.vy = data->axes[4];
-    input.vz = data->axes[0];
+    axes:
+    vx
+    vy
+    vz
+    arrow right+
+    arrow left-
+    arrow up
+    arrow left
+    */
+
+    input.a = data->buttons[keybind.a];
+    input.x = data->buttons[keybind.x];
+    input.y = data->buttons[keybind.y];
+    input.b = data->buttons[keybind.b];
+    input.lt = data->buttons[keybind.lt];
+    input.rt = data->buttons[keybind.rt];
+
+    input.vx = -data->axes[keybind.left_joystick_up_down];
+    input.vy = data->axes[keybind.right_joystick_up_down];
+    input.vz = data->axes[keybind.left_joystick_left_right];
 
     input.vx = -input.vx * input.speed_multiplier;
     input.vy = input.vy * input.speed_multiplier;
     input.vz = -input.vz * input.speed_multiplier;
     input.va = (input.lt - input.rt) * input.speed_multiplier;
 
-    input.calibration_button = data->buttons[12];
-
-    // input.joint_mode_toggle = data->buttons[8];
-
-    input.joint_change = -data->axes[6];
-    input.speed_increase = data->axes[7];
+    input.joint_change = -data->axes[keybind.arrow_left_right];
+    input.speed_increase = data->axes[keybind.arrow_up_down];
 
     //--------------------------------------------------
     // Change le joint actif pour le mode Joint
@@ -400,4 +435,21 @@ void speedLimiter(boost::array<double, 4UL> vitesse)
 
     for (int i = 0; i < NOMBRE_MOTEUR; i++)
         moteurs[i].setPeriod(vitesse[i] * facteurLimitant);
+}
+
+void bindKeybindings(ros::NodeHandle *n)
+{
+    n->param("a", keybind.a, 0);
+    n->param("b", keybind.b, 1);
+    n->param("x", keybind.x, 2);
+    n->param("y", keybind.y, 3);
+    n->param("rt", keybind.rt, 5);
+    n->param("lt", keybind.lt, 4);
+
+    n->param("left_joystick_up_down", keybind.left_joystick_up_down, 1);
+    n->param("left_joystick_left_right", keybind.right_joystick_left_right, 0);
+    n->param("right_joystick_up_down", keybind.right_joystick_up_down, 4);
+    n->param("right_joystick_left_right", keybind.right_joystick_left_right, 3);
+    n->param("arrow_up_down", keybind.arrow_up_down, 7);
+    n->param("arrow_left_right", keybind.arrow_left_right, 6);
 }
