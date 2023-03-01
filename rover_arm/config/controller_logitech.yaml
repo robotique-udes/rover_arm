@@ -1,0 +1,15 @@
+# Buttons
+a: 0
+b: 1
+x: 2
+y: 3
+rt: 5
+lt: 4
+
+# Axis:
+left_joystick_up_down: 1
+left_joystick_left_right: 0
+right_joystick_up_down: 4
+right_joystick_left_right: 3
+arrow_up_down: 7
+arrow_left_right: 6

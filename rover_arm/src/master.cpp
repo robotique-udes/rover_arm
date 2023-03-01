@@ -26,7 +26,7 @@ void calculateSpeedCartesian();
 void assembleAndSendArduinoMsg();
 void assembleAndSendFeedbackMsg();
 void speedLimiter(boost::array<double, 4UL> vitesse);
-void bindKeybindings(ros::NodeHandle *n);
+void bindKeybindings();
 
 class Moteur
 {
@@ -156,7 +156,7 @@ void init()
     sub_arm_gui_cmd = n.subscribe("arm_gui_cmd", 5, guiCmdCallback);
     client_diff_kinetics_calc = n.serviceClient<rover_arm::diffKinematicsCalc>("diff_kinematics_calc");
 
-    bindKeybindings(&n);
+    bindKeybindings();
 }
 
 void loop()
@@ -239,25 +239,6 @@ void angleMsgCallback(const rover_arm::angle::ConstPtr &data)
 
 void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
 {
-    /*Params :
-    buttons:
-    a
-    b
-    x
-    y
-    lt
-    rt
-
-    axes:
-    vx
-    vy
-    vz
-    arrow right+
-    arrow left-
-    arrow up
-    arrow left
-    */
-
     input.a = data->buttons[keybind.a];
     input.x = data->buttons[keybind.x];
     input.y = data->buttons[keybind.y];
@@ -437,19 +418,18 @@ void speedLimiter(boost::array<double, 4UL> vitesse)
         moteurs[i].setPeriod(vitesse[i] * facteurLimitant);
 }
 
-void bindKeybindings(ros::NodeHandle *n)
+void bindKeybindings()
 {
-    n->param("a", keybind.a, 0);
-    n->param("b", keybind.b, 1);
-    n->param("x", keybind.x, 2);
-    n->param("y", keybind.y, 3);
-    n->param("rt", keybind.rt, 5);
-    n->param("lt", keybind.lt, 4);
-
-    n->param("left_joystick_up_down", keybind.left_joystick_up_down, 1);
-    n->param("left_joystick_left_right", keybind.right_joystick_left_right, 0);
-    n->param("right_joystick_up_down", keybind.right_joystick_up_down, 4);
-    n->param("right_joystick_left_right", keybind.right_joystick_left_right, 3);
-    n->param("arrow_up_down", keybind.arrow_up_down, 7);
-    n->param("arrow_left_right", keybind.arrow_left_right, 6);
+    ros::param::get(ros::this_node::getName() + "/a", keybind.a);
+    ros::param::get(ros::this_node::getName() + "/b", keybind.b);
+    ros::param::get(ros::this_node::getName() + "/x", keybind.x);
+    ros::param::get(ros::this_node::getName() + "/y", keybind.y);
+    ros::param::get(ros::this_node::getName() + "/rt", keybind.rt);
+    ros::param::get(ros::this_node::getName() + "/lt", keybind.lt);
+    ros::param::get(ros::this_node::getName() + "/left_joystick_up_down", keybind.left_joystick_up_down);
+    ros::param::get(ros::this_node::getName() + "/left_joystick_left_right", keybind.right_joystick_left_right);
+    ros::param::get(ros::this_node::getName() + "/right_joystick_up_down", keybind.right_joystick_up_down);
+    ros::param::get(ros::this_node::getName() + "/right_joystick_left_right", keybind.right_joystick_left_right);
+    ros::param::get(ros::this_node::getName() + "/arrow_up_down", keybind.arrow_up_down);
+    ros::param::get(ros::this_node::getName() + "/arrow_left_right", keybind.arrow_left_right);
 }

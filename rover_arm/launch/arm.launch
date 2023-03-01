@@ -3,22 +3,8 @@
 
     <!-- Lancer la node de cinematiqe inverse-->
     <node name="arm_master" pkg="rover_arm" type="master_cpp">
-        <param name="a" value="0" />
-        <param name="b" value="1" />
-        <param name="x" value="2" />
-        <param name="y" value="3" />
-        <param name="rt" value="5" />
-        <param name="lt" value="4" />
-
-        <!-- Axes -->
-        <param name="left_joystick_up_down" value="1" />
-        <param name="left_joystick_left_right" value="0" />
-        <param name="right_joystick_up_down" value="4" />
-        <param name="right_joystick_left_right" value="3" />
-        <param name="arrow_up_down" value="7" />
-        <param name="arrow_left_right" value="6" />
+        <rosparam file="$(find rover_arm)/config/controller_logitech.yaml" />
     </node>
-    <!-- buttons -->
 
     <!--Lancer
     la communication avec l'arduino-->
