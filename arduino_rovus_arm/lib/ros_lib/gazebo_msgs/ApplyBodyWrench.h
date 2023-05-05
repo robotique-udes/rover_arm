@@ -6,8 +6,8 @@
 #include "ros/msg.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Wrench.h"
-#include "ros/duration.h"
 #include "ros/time.h"
+#include "ros/duration.h"
 
 namespace gazebo_msgs
 {

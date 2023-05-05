@@ -1,0 +1,48 @@
+#include <Arduino.h>
+#include "ros.h"
+#include "rover_arm_msg/encoder_status.h"
+#include "rover_arm_msg/infos.h"
+#include "Wire.h"
+
+#define I2C_ADDRESS 0x36
+
+void sub_pid_coeff_callback(rover_arm_msg::infos &data);
+
+void setup()
+{
+    ros::NodeHandle n;
+    rover_arm_msg::encoder_status msg;
+    ros::Publisher pub_encoder_state("encoder_state", &msg);
+    ros::Subscriber<rover_arm_msg::infos> sub_pid_coeff("pid_coeff", sub_pid_coeff_callback, 1);
+
+    n.getHardware()->setBaud(57600);
+    n.initNode();
+    n.advertise(pub_encoder_state);
+    n.subscribe(sub_pid_coeff);
+    n.negotiateTopics();
+    
+    while (1)
+    {
+        n.spinOnce();
+
+        Wire.beginTransmission(I2C_ADDRESS);
+        //Getting status register
+        Wire.write(0x0B);
+        Wire.endTransmission(false);
+        Wire.requestFrom(I2C_ADDRESS, 1);
+
+        int status = Wire.read();
+
+        Wire.endTransmission();
+
+        //Sending irrelevent data just for example
+        rover_arm_msg::encoder_status msg;
+        msg.state = msg.SIGNAL_OK;
+        pub_encoder_state.publish(&msg);
+    }
+}
+
+void sub_pid_coeff_callback(rover_arm_msg::infos &data)
+{
+    //just to have a callback
+}

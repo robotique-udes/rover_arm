@@ -15,10 +15,13 @@ namespace rover_arm
       bool enable[4];
       typedef uint8_t _state_type;
       _state_type state;
+      typedef bool _jog_is_cartesian_type;
+      _jog_is_cartesian_type jog_is_cartesian;
 
     arm_gui_cmd():
       enable(),
-      state(0)
+      state(0),
+      jog_is_cartesian(0)
     {
     }
 
@@ -36,6 +39,13 @@ namespace rover_arm
       }
       *(outbuffer + offset + 0) = (this->state >> (8 * 0)) & 0xFF;
       offset += sizeof(this->state);
+      union {
+        bool real;
+        uint8_t base;
+      } u_jog_is_cartesian;
+      u_jog_is_cartesian.real = this->jog_is_cartesian;
+      *(outbuffer + offset + 0) = (u_jog_is_cartesian.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->jog_is_cartesian);
       return offset;
     }
 
@@ -54,11 +64,19 @@ namespace rover_arm
       }
       this->state =  ((uint8_t) (*(inbuffer + offset)));
       offset += sizeof(this->state);
+      union {
+        bool real;
+        uint8_t base;
+      } u_jog_is_cartesian;
+      u_jog_is_cartesian.base = 0;
+      u_jog_is_cartesian.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->jog_is_cartesian = u_jog_is_cartesian.real;
+      offset += sizeof(this->jog_is_cartesian);
      return offset;
     }
 
     virtual const char * getType() override { return "rover_arm/arm_gui_cmd"; };
-    virtual const char * getMD5() override { return "c39daca3a7fb7f1968c73e114c0cb8d5"; };
+    virtual const char * getMD5() override { return "a775524dacc88feef94b826cd8fd9597"; };
 
   };
 
