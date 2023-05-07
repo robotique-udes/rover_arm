@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "std_msgs/Int16.h"
 #include "robotnik_msgs/ReturnMessage.h"
+#include "std_msgs/Int16.h"
 
 namespace robotnik_msgs
 {

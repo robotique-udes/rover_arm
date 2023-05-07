@@ -1,6 +1,6 @@
 #include "AS5600.hpp"
 
-rover_arm_lib::AS5600::AS5600(ros::NodeHandle *node_handle_ptr, short out, short dir, short I2C, ros::Publisher *pub_ptr)
+rover_arm_lib::AS5600::AS5600(ros::NodeHandle *node_handle_ptr, short out, short dir, short I2C)
 {
     n = node_handle_ptr;
 
@@ -9,9 +9,6 @@ rover_arm_lib::AS5600::AS5600(ros::NodeHandle *node_handle_ptr, short out, short
     pin_dir = dir;
 
     prev_micros = micros();
-    encoder_state_prev_millis = millis();
-
-    pub_encoder_state = pub_ptr;
 }
 
 void rover_arm_lib::AS5600::updateReading()
@@ -80,11 +77,6 @@ double rover_arm_lib::AS5600::updateSpeed()
 
 double rover_arm_lib::AS5600::updateLoop()
 {
-    if (encoder_state_prev_millis + ENCODER_STATE_RATE < millis())
-    {
-        sendEncoderStatus();
-        encoder_state_prev_millis = millis();
-    }
     updateReading();
     updateCadrant();
     updateTurnCount();
@@ -119,28 +111,4 @@ void rover_arm_lib::AS5600::setZero(float shift)
 #else
     zero_calib = getAngle(ABSOLUTE) - shift;
 #endif
-}
-
-//TODO: Finish implementation
-void rover_arm_lib::AS5600::sendEncoderStatus()
-{
-    if (pub_encoder_state == NULL)
-    {
-        return;
-    }
-
-    rover_arm_msg::encoder_status msg;
-    Wire.begin();
-    Wire.beginTransmission(0x36);
-    // Getting status register
-    Wire.write(0x0B);
-    Wire.endTransmission(false);
-    Wire.requestFrom(0x36, 1);
-    Wire.read();
-
-    Wire.endTransmission();
-    Wire.end();
-
-    msg.state = msg.SIGNAL_OK;
-    pub_encoder_state->publish(&msg);
 }

@@ -1,4 +1,4 @@
-#include "moving_average.hpp"
+#include "MovingAverage.hpp"
 
 rover_arm_lib::MovingAverage::MovingAverage() 
 {
