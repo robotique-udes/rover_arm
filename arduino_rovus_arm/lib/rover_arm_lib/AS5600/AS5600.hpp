@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include "moving_average/moving_average.hpp"
+#include "MovingAverage/MovingAverage.hpp"
 #include "ros.h"
 #include "rover_arm_msg/encoder_status.h"
 #include <Wire.h>
@@ -36,9 +36,6 @@ namespace rover_arm_lib
     private:
         //ROS
         ros::NodeHandle *n;
-        ros::Publisher* pub_encoder_state = NULL;
-        unsigned long encoder_state_prev_millis;
-
 
         // Angle
         float zero_calib = 0.0f;
@@ -70,7 +67,7 @@ namespace rover_arm_lib
         void sendEncoderStatus();
 
     public:
-        AS5600(ros::NodeHandle *node_handle_ptr, short out, short dir, short I2C, ros::Publisher *pub_ptr = NULL);
+        AS5600(ros::NodeHandle *node_handle_ptr, short out, short dir, short I2C);
 
         double updateLoop();
         void setZero(float shift = 0.0f);
@@ -79,6 +76,5 @@ namespace rover_arm_lib
         long getRawAngle() { return curr_raw_angle; }
         double getRawSpeed() { return curr_raw_speed; }
         double getSpeed() { return filtered_speed; }
-        void setPublisher(ros::Publisher* pub_ptr) { pub_encoder_state = pub_ptr;}
     };
 }

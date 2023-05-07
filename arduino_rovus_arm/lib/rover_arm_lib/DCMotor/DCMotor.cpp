@@ -1,4 +1,4 @@
-#include "dc_motor.hpp"
+#include "DCMotor.hpp"
 
 rover_arm_lib::DCMotor::DCMotor(ros::NodeHandle *node_handle_ptr, short PWM,
                                 const short DIR, const short out,
@@ -22,4 +22,10 @@ void rover_arm_lib::DCMotor::setDirection(bool direction)
 void rover_arm_lib::DCMotor::setPWM(short pwm_value)
 {
     analogWrite(PWM_PIN, pwm_value);
+}
+
+float rover_arm_lib::DCMotor::updateLoop()
+{
+    current_speed = static_cast<float>(encoder.updateLoop());
+    return current_speed;
 }

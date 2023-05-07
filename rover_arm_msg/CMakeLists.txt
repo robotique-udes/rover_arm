@@ -13,9 +13,10 @@ add_message_files(
   joint_state.msg
 )
 
-# add_service_files(
-#   FILES
-# )
+add_service_files(
+  FILES
+  joint_calib.srv
+)
 
 generate_messages(
   DEPENDENCIES
