@@ -1,0 +1,5 @@
+j1:
+  type: "stepper"
+  openLoop: 1
+  gearbox: 100
+  stepPerTurn: 1600

@@ -1,16 +1,18 @@
 <launch>
     <group ns="joints">
+        <rosparam file="$(find rover_arm)/config/joint_config.yaml" />
+
         <group ns="j1">
             <node name="j1" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0" />
             </node>
         </group>
 
-        <group ns="j2">
+        <!-- <group ns="j2">
             <node name="j2" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0" />
             </node>
-        </group>
+        </group> -->
     </group>
 
 </launch>
