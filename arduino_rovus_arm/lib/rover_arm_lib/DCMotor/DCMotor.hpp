@@ -6,7 +6,7 @@ namespace rover_arm_lib
 {
     class DCMotor
     {
-    private:
+    protected:
         int DIR_PIN;
         int PWM_PIN;
         bool curr_direction;
