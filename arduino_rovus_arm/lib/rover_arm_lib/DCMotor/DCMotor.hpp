@@ -7,13 +7,15 @@ namespace rover_arm_lib
     class DCMotor
     {
     protected:
+        short PWM_PIN;
         int DIR_PIN;
-        int PWM_PIN;
         bool curr_direction;
         float current_speed;
         AS5600 encoder;
 
     public:
+
+
         DCMotor(ros::NodeHandle* node_handle_ptr, short PWM, const short DIR, const short out, const short dir, const short I2C = 0x36);
         void setDirection(bool direction);
         void setPWM(short pwm);
