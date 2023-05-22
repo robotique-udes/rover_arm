@@ -11,6 +11,7 @@ add_message_files(
   encoder_status.msg
   desired_joint_state.msg
   joint_state.msg
+  watchdog.msg
 )
 
 add_service_files(

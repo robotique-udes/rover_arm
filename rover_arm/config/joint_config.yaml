@@ -1,6 +1,18 @@
+#Don't forget to reset each arduino after a parameter change
+
 j1:
   type: "stepper"
   open_loop: 1
+  gearbox: 5
+  step_per_turn: 1600
+  PWM: 6
+  DIR: 13 
+  EN:  4
+  ENCODER: 14
+
+j2:
+  type: "dc"
+  open_loop: 0
   gearbox: 77
   step_per_turn: 1600
   PWM: 6
