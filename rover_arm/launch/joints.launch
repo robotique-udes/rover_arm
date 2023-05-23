@@ -2,8 +2,6 @@
     <group ns="arm">
         <node name="watchdog" pkg="rover_arm" type="joint_watchdog" output="screen" />
 
-        <rosparam file="$(find rover_arm)/config/joint_config.yaml" />
-
         <group ns="j1">
             <node name="j1" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0" />

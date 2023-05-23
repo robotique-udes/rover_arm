@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
 
-    ros::Publisher pub_watchdog = n.advertise<rover_arm_msg::watchdog>("/JWD", 1);
+    ros::Publisher pub_watchdog = n.advertise<rover_arm_msg::watchdog>(ros::this_node::getNamespace() + "/JWD", 1);
     ros::Rate timer(4);
 
     while(!ros::isShuttingDown())
