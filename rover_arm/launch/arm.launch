@@ -1,18 +1,9 @@
 <launch>
     <arg name="serialPort" default="/dev/ttyACM0" />
 
-    <!-- Lancer la node de cinematiqe inverse-->
+    <!-- Master node -->
     <node name="arm_master" pkg="rover_arm" type="master_cpp" />
-
-    <!--Lancer la communication avec l'arduino-->
-    <node name="arm_arduino" pkg="rosserial_arduino" type="serial_node.py">
-        <param name="port" value="$(arg serialPort)"/>
-    </node>
 
     <!--Lancer le service de calcul en cartésien-->
     <node name="arm_diff_kinetics_calc_server" pkg="rover_arm" type="diff_kinetics_calc_server.py" />
-
-    <!--Lancer le gui rqt-->
-    <node name = "arm_gui" pkg = "rqt_gui" type = "rqt_gui" respawn = "true" output = "screen"/>
-
 </launch>
