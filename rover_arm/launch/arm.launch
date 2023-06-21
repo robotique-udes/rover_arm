@@ -1,9 +1,15 @@
+<?xml version='1.0'?>
 <launch>
-    <arg name="serialPort" default="/dev/ttyACM0" />
+    <group ns="arm">
+        <!-- Master node -->
+        <node name="arm_master" pkg="rover_arm" type="master" output="screen">
+            <rosparam file="$(find rover_arm)/config/controller_alex.yaml" />
+            <rosparam file="$(find rover_arm)/config/speeds.yaml" />
+        </node>
 
-    <!-- Master node -->
-    <node name="arm_master" pkg="rover_arm" type="master_cpp" />
-
-    <!--Lancer le service de calcul en cartésien-->
-    <node name="arm_diff_kinetics_calc_server" pkg="rover_arm" type="diff_kinetics_calc_server.py" />
+        <!--Lancer
+        le service de calcul en cartésien-->
+        <node name="arm_diff_kinetics_calc_server" pkg="rover_arm"
+            type="diff_kinetics_calc_server.py" />
+    </group>
 </launch>

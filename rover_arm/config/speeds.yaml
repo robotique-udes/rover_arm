@@ -1,0 +1,11 @@
+# Speeds are in deg/s
+speed_crawler: 1.0
+speed_normal: 5.0
+speed_fast: 20.0
+speed_cartesian_mode_divider: 5.0
+
+# Joint max speed config
+max_speed_j0: 15.0
+max_speed_j1: 15.0
+max_speed_j2: 15.0
+max_speed_j3: 15.0

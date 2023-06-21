@@ -1,24 +1,25 @@
+<?xml version='1.0'?>
 <launch>
     <group ns="arm">
         <node name="watchdog" pkg="rover_arm" type="joint_watchdog" output="screen" />
 
-        <group ns="j1">
-            <node name="j1" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+        <group ns="j0">
+            <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0" />
             </node>
         </group>
 
-        <!-- <group ns="j2">
-            <node name="j2" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0" />
+        <!-- <group ns="j1">
+            <node name="j1" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+                <param name="port" value="" />
             </node>
         </group> -->
 
-        <group ns="j3">
-            <node name="j3" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+        <!-- <group ns="j2">
+            <node name="j2" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0" />
             </node>
-        </group>
+        </group> -->
     </group>
 
 </launch>

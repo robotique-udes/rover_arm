@@ -8,7 +8,7 @@ import matplotlib.animation as animation
 from matplotlib import style
 from mpl_toolkits import mplot3d
 import math as m
-from rover_arm.msg import angle
+from rover_arm_msgs.msg import feedback
 
 style.use('default')
 
@@ -44,7 +44,7 @@ q4 = 0
 def main():
     rospy.init_node('liveGraphAllViews')
     #Sub aux valeurs d'angles
-    sub_angle = rospy.Subscriber('valeurAngles', angle, callback=angle_callback)
+    sub_angle = rospy.Subscriber('rover_arm_feedback', feedback, callback=angle_callback)
 
     plt.ion()
 
@@ -136,15 +136,15 @@ def calculateCoord():
 
     return zarray, xarray, yarray
 
-def angle_callback(angle: angle):
+def angle_callback(msg: feedback):
     global q1
     global q2
     global q3
     global q4
-    q1 = angle.angle[0]*pi/180
-    q2 = angle.angle[1]*pi/180
-    q3 = angle.angle[2]*pi/180
-    q4 = angle.angle[3]*pi/180
+    q1 = msg.angles[0]*pi/180
+    q2 = msg.angles[1]*pi/180
+    q3 = msg.angles[2]*pi/180
+    q4 = msg.angles[3]*pi/180
 
 if __name__=='__main__':
     main()

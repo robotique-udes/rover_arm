@@ -7,14 +7,14 @@
 #include "rover_arm_msg/joint_calib.h"
 
 #define OPEN_LOOP 1
-#define GEARBOX 1
+#define GEARBOX 77
 #define STEP_PER_TURN 1600
 #define PWM 6
 #define DIR 13
 #define EN 4
 #define ENCODER 14
 
-#define JOINT_NB "j1"
+#define JOINT_NB "j0"
 #define PARAM_HEAD_STRING "/arm/" JOINT_NB "/" // Set joint number here
 #define BAUD 57600
 

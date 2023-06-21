@@ -1,12 +1,12 @@
 #Angles
-float32[4] angles
+float32[6] angles
 
 #Vitesse
 bool singular_matrix
-float32[4] vitesses
+float32[6] vitesses
 
 #Enable
-bool[4] enable
+bool[6] enable
 
 #Controller
 bool ctrl_mode #1 = joint mode | 0 = cartesian

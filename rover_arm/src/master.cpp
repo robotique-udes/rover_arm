@@ -1,435 +1,397 @@
 #include "ros/ros.h"
-#include "ros/console.h"
-#include "rover_arm/vitesse_moteur_msg.h"
-#include "rover_arm/angle.h"
-#include "rover_arm/feedback.h"
-#include "rover_arm/arm_gui_cmd.h"
 #include "sensor_msgs/Joy.h"
-#include <string>
-#include <sstream>
-#include "rover_arm/diffKinematicsCalc.h"
+#include "rover_arm_msgs/joint_state.h"
+#include <thread>
+#include "rover_arm_msgs/diff_kinematics_calc.h"
+#include "rover_arm_msgs/feedback.h"
+#include "std_msgs/Empty.h"
 
-// _______________________________________________________________
+#define IN
+#define OUT
 
-// Fonctions prototypes
-void init();
-void loop();
-void standbyLoop();
-void runningLoop();
-void holdLoop();
-void calibrationLoop();
-void angleMsgCallback(const rover_arm::angle::ConstPtr &data);
-void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data);
-void guiCmdCallback(const rover_arm::arm_gui_cmd::ConstPtr &data);
-void calculateSpeedJoint();
-void calculateSpeedCartesian();
-void assembleAndSendArduinoMsg();
-void assembleAndSendFeedbackMsg();
-void speedLimiter(boost::array<double, 4UL> vitesse);
-void bindKeybindings();
+#define NB_JOINT 6
+#define NB_JOINT_CARTESIAN_MODE 4
+#define LOCK std::lock_guard<std::mutex>
 
-class Moteur
+struct Keybinds
 {
+    int axis_cmd_x;
+    int axis_cmd_y;
+    int axis_cmd_z;
+    int axis_cmd_joint;
+    int button_cmd_a_positive;
+    int button_cmd_a_negative;
+    int button_crawler;
+    int button_enable;
+    int button_fast;
+    int button_joint_increase;
+    int button_joint_decrease;
+    int button_control_mode_toggle;
+};
+
+struct SpeedModes
+{
+    float crawler = 0.0f;
+    float normal = 0.0f;
+    float fast = 0.0f;
+    float speed_cartesian_mode_divider = 1.0f;
+};
+
+class ArmMasterNode
+{
+public:
+    // =========================================================================
+    // Constructor / Destructor
+    // =========================================================================
+    ArmMasterNode() : m_prev_msg()
+    {
+        getParams();
+
+        m_sub_heartbeat = m_nh.subscribe<std_msgs::Empty>("/base_heartbeat", 1, &ArmMasterNode::CBHeartbeat, this);
+        m_timer_watchdog = m_nh.createTimer(ros::Duration(1.0f), &ArmMasterNode::CBResetWatchdog, this);
+
+        // Initialising publisher for DesiredJointState
+        for (int i = 0; i < NB_JOINT; i++)
+        {
+            m_apub_j[i] = m_nh.advertise<rover_arm_msgs::joint_state>("/arm/j" + std::to_string(i) + "/DJS", 1);
+        }
+
+        // Initialising subscriber for JointState
+        for (int i = 0; i < NB_JOINT; i++)
+        {
+            m_asub_j[i] = m_nh.subscribe<rover_arm_msgs::joint_state>("/arm/j" + std::to_string(i) + "/JS",
+                                                                     1,
+                                                                     boost::bind(&ArmMasterNode::CBJS, this, _1, i));
+        }
+
+        // Initialising joy subscriber
+        // Needs to initialise with column of zeros otherwise indexes will be
+        // out of bound in CBJoy and cause a segmentation fault
+        m_prev_msg.buttons = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        m_prev_msg.axes = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        m_sub_joy = m_nh.subscribe<sensor_msgs::Joy>("/arm_joy", 1, &ArmMasterNode::CBJoy, this);
+
+        // Initialising service client for inverse differential kinematic calculations
+        m_srv_diff_calc = m_nh.serviceClient<rover_arm_msgs::diff_kinematics_calcRequest,
+                                             rover_arm_msgs::diff_kinematics_calcResponse>("diff_kinematics_calc");
+
+        // Initialising gui feedback msgs. It comes from an older version of
+        // rover_arm and needs to be cleaned (multiple ununsed members)). It's
+        // link to a timer but doesn't start on it's own. It needs to be started
+        // after we start spinning. The / before the topic name means it will be
+        // a global topic (not affected by namespaces)
+        m_pub_feedback = m_nh.advertise<rover_arm_msgs::feedback>("/rover_arm_feedback", 1);
+        m_timer_feedback = m_nh.createTimer(ros::Duration(0.1), &ArmMasterNode::CBFeedback, this, false, false);
+
+        ROS_INFO("%s node is ready", ros::this_node::getName().c_str());
+    }
+    
+    // =========================================================================
+    // Public methods
+    // =========================================================================
+    void Run()
+    {
+        ros::AsyncSpinner spinner(0); // Number of thread used = number of cores
+        spinner.start();
+        m_timer_feedback.start();
+        ros::waitForShutdown();
+        m_timer_feedback.stop();
+    }
+
 private:
-    float angle = 0.0;
-    float period = 0.0;
-    bool enable = true;
-    bool dir = 0;
+    // =========================================================================
+    // Private members
+    // =========================================================================
+    ros::NodeHandle m_nh;
+    ros::Subscriber m_sub_heartbeat;
+    ros::Subscriber m_sub_joy;
+    ros::Subscriber m_asub_j[NB_JOINT];
+    ros::Publisher m_apub_j[NB_JOINT];
+    ros::ServiceClient m_srv_diff_calc;
+    ros::Publisher m_pub_feedback;
+    ros::Timer m_timer_feedback;
+    ros::Timer m_timer_watchdog;
 
-public:
-    void setAngle(float iAngle) { angle = iAngle; }
-    float getAngle() { return angle; }
+    std::mutex m_mutex_m_b_com_is_alive;
+    bool m_b_com_is_alive = false;
+    std::mutex m_mutex_m_b_watchdog_is_alive;
+    bool m_b_watchdog_is_alive = false;
 
-    void setPeriod(float iPeriod) { period = iPeriod; }
-    float getPeriod() { return period; }
+    std::mutex m_mutex_m_af_angle;
+    float m_af_angle[NB_JOINT] = {10.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f};
 
-    void setEnable(bool iEnable) { enable = iEnable; }
-    float getEnable() { return enable; }
+    std::mutex m_mutex_m_af_speed;
+    float m_af_speed[NB_JOINT] = {0.0f};
 
-    float getDir() { return (period > 0) ? 1 : 0; }
-};
-class Controller
-{
-public:
-    bool a = 0;
-    bool b = 0;
-    bool x = 0;
-    bool y = 0;
-    bool lt = 0;
-    bool rt = 0;
+    std::mutex m_mutex_m_b_mode_cartesian;
+    bool m_b_mode_cartesian = false;
 
-    float vx = 0.0;
-    float vy = 0.0;
-    float vz = 0.0;
-    float va = 0.0;
+    std::mutex m_mutex_m_n_current_joint;
+    int m_n_current_joint = 0;
 
-    bool joint_mode_toggle = 0;
-    int joint_change = 0;
-    int joint_current = 1;
-    bool calibration_button = 0;
+    Keybinds m_keybind;
+    SpeedModes m_speed_modes;
+    sensor_msgs::Joy m_prev_msg;
+    float m_af_joint_max_speed[NB_JOINT_CARTESIAN_MODE];
 
-    float speed_multiplier = 0.01;
-    int speed_increase = 0;
-};
-struct Keybind
-{
-    // Buttons
-    int a;
-    int b;
-    int x;
-    int y;
-    int rt;
-    int lt;
-
-    // axes
-    int left_joystick_up_down;
-    int left_joystick_left_right;
-    int right_joystick_up_down;
-    int right_joystick_left_right;
-    int arrow_up_down;
-    int arrow_left_right;
-} keybind;
-
-// Enum
-enum states
-{
-    standby,
-    running,
-    hold,
-    calibration
-};
-enum jogModes
-{
-    joint,
-    cartesian
-};
-
-//_______________________________________________________________
-
-// Constantes
-#define RATE_FEEDBACK 10 // Hz
-#define RATE_ROS 50      // Hz
-
-const int NOMBRE_MOTEUR = 4;
-const float BASE_SPEED = 10;
-const jogModes DEFAULT_JOG_MODE = joint;
-const float SPEED_INCREMENT = 0.1;
-const float VITESSE_MAX = 20.0; // en deg/s
-const bool ENABLE = 1;
-const bool DISABLE = 0;
-
-// Variables globales
-bool singularMatrix_flag = false;
-bool kineticsCalcError = false;
-
-// Objets globaux
-ros::Publisher pub_moteur;
-ros::Publisher pub_feedback;
-ros::Subscriber sub_angle;
-ros::Subscriber sub_input;
-ros::Subscriber sub_arm_gui_cmd;
-ros::ServiceClient client_diff_kinetics_calc;
-
-Moteur moteurs[NOMBRE_MOTEUR];
-Controller input;
-
-// Enum
-jogModes jogMode = DEFAULT_JOG_MODE;
-states currentState = running;
-
-//_______________________________________________________________
-int main(int argc, char *argv[])
-{
-    ros::init(argc, argv, "master");
-
-    init();
-    loop();
-}
-
-void init()
-{
-    ros::NodeHandle n;
-    pub_moteur = n.advertise<rover_arm::vitesse_moteur_msg>("vitesses_moteur", 0);
-    pub_feedback = n.advertise<rover_arm::feedback>("rover_arm_feedback", 0);
-    sub_angle = n.subscribe("valeurAngles", 5, angleMsgCallback);
-    sub_input = n.subscribe("/arm_joy", 5, joyMsgCallback);
-    sub_arm_gui_cmd = n.subscribe("arm_gui_cmd", 5, guiCmdCallback);
-    client_diff_kinetics_calc = n.serviceClient<rover_arm::diffKinematicsCalc>("diff_kinematics_calc");
-
-    bindKeybindings();
-}
-
-void loop()
-{
-    ros::Time lastTime;
-
-    while (ros::ok())
+    // =========================================================================
+    // Private methods
+    // =========================================================================
+    // Magic happens here
+    void CBJoy(const sensor_msgs::Joy msg)
     {
-        switch (currentState)
+        // Ctrl mode toggling
+        // When releasing control_mode_toggle_button
+        if (!msg.buttons[m_keybind.button_control_mode_toggle] &&
+            m_prev_msg.buttons[m_keybind.button_control_mode_toggle])
         {
-        case standby:
-        {
-            standbyLoop();
-            break;
+            LOCK lock(m_mutex_m_b_mode_cartesian);
+            m_b_mode_cartesian = !m_b_mode_cartesian;
         }
 
-        case running:
+        // Current joint update (scope is for lock's destructor)
         {
-            runningLoop();
-            break;
-        }
-
-        case calibration:
-        {
-            calibrationLoop();
-            break;
-        }
-        }
-        assembleAndSendArduinoMsg();
-
-        if ((ros::Time::now() - ros::Duration(1.0 / RATE_FEEDBACK)) > lastTime)
-        {
-            assembleAndSendFeedbackMsg();
-            lastTime = ros::Time::now();
-        }
-
-        ros::Rate loop_rate(RATE_ROS);
-        ros::spinOnce();
-        loop_rate.sleep();
-    }
-}
-
-void standbyLoop()
-{
-    // TODO
-    // Go to StanbyPosition
-
-    for (int i = 0; i < NOMBRE_MOTEUR; i++)
-    {
-        moteurs[i].setEnable(DISABLE);
-    }
-}
-
-void runningLoop()
-{
-    switch (jogMode)
-    {
-    case joint:
-    {
-        calculateSpeedJoint();
-        break;
-    }
-    case cartesian:
-    {
-        calculateSpeedCartesian();
-        break;
-    }
-    }
-}
-
-void calibrationLoop() {}
-
-void angleMsgCallback(const rover_arm::angle::ConstPtr &data)
-{
-    for (int i = 0; i < sizeof(moteurs) / sizeof(Moteur); i++)
-    {
-        moteurs[i].setAngle(data->angle[i]);
-    }
-}
-
-void joyMsgCallback(const sensor_msgs::Joy::ConstPtr &data)
-{
-    input.a = data->buttons[keybind.a];
-    input.x = data->buttons[keybind.x];
-    input.y = data->buttons[keybind.y];
-    input.b = data->buttons[keybind.b];
-    input.lt = data->buttons[keybind.lt];
-    input.rt = data->buttons[keybind.rt];
-
-    input.vx = -data->axes[keybind.left_joystick_up_down];
-    input.vy = data->axes[keybind.right_joystick_up_down];
-    input.vz = data->axes[keybind.left_joystick_left_right];
-
-    input.vx = -input.vx * input.speed_multiplier;
-    input.vy = input.vy * input.speed_multiplier;
-    input.vz = -input.vz * input.speed_multiplier;
-    input.va = (input.lt - input.rt) * input.speed_multiplier;
-
-    input.joint_change = -data->axes[keybind.arrow_left_right];
-    input.speed_increase = data->axes[keybind.arrow_up_down];
-
-    //--------------------------------------------------
-    // Change le joint actif pour le mode Joint
-    if (input.joint_change > 0)
-    {
-        input.joint_current += 1;
-        input.joint_current = input.joint_current <= NOMBRE_MOTEUR ? input.joint_current : 1;
-    }
-
-    if (input.joint_change < 0)
-    {
-        input.joint_current -= 1;
-        input.joint_current = input.joint_current > 0 ? input.joint_current : 4;
-    }
-
-    //--------------------------------------------------
-    // if (input.joint_mode_toggle && jogMode == joint)
-    //     jogMode = cartesian;
-    // else if (input.joint_mode_toggle && jogMode == cartesian)
-    //     jogMode = joint;
-
-    //--------------------------------------------------
-    if (input.speed_increase > 0)
-        input.speed_multiplier += SPEED_INCREMENT;
-    if (input.speed_increase < 0)
-        input.speed_multiplier -= SPEED_INCREMENT;
-}
-
-void guiCmdCallback(const rover_arm::arm_gui_cmd::ConstPtr &data)
-{
-    currentState = data->state == 0 ? standby : currentState;
-    currentState = data->state == 1 ? running : currentState;
-    currentState = data->state == 2 ? calibration : currentState;
-
-    for (int i = 0; i < sizeof(moteurs) / sizeof(Moteur); i++)
-    {
-        moteurs[i].setEnable(data->enable[i]);
-    }
-
-    if (data->jog_is_cartesian)
-        jogMode = cartesian;
-    else
-        jogMode = joint;
-}
-
-void calculateSpeedJoint()
-{
-    for (int i = 0; i < sizeof(moteurs) / sizeof(Moteur); i++)
-        moteurs[i].setPeriod(0);
-
-    if (input.rt)
-    {
-        float speed = BASE_SPEED * input.speed_multiplier;
-        moteurs[input.joint_current - 1].setPeriod(speed);
-    }
-    if (input.lt)
-    {
-        float speed = -BASE_SPEED * input.speed_multiplier;
-        moteurs[input.joint_current - 1].setPeriod(speed);
-    }
-}
-
-void assembleAndSendArduinoMsg()
-{
-    rover_arm::vitesse_moteur_msg msg;
-
-    for (int i = 0; i < sizeof(moteurs) / sizeof(Moteur); i++)
-    {
-        msg.En[i] = moteurs[i].getEnable();
-
-        if (moteurs[i].getEnable())
-        {
-            msg.Period[i] = (long)(1000000 / moteurs[i].getPeriod());
-            msg.Dir[i] = moteurs[i].getDir();
-        }
-    }
-
-    pub_moteur.publish(msg);
-}
-
-void assembleAndSendFeedbackMsg()
-{
-    rover_arm::feedback msg;
-
-    msg.limiteur = 0;
-
-    for (int i = 0; i < sizeof(moteurs) / sizeof(Moteur); i++)
-    {
-        msg.angles[i] = moteurs[i].getAngle();
-        msg.vitesses[i] = moteurs[i].getPeriod();
-        msg.enable[i] = moteurs[i].getEnable();
-        if (moteurs[i].getPeriod() == VITESSE_MAX)
-            msg.limiteur = 1;
-    }
-
-    msg.ctrl_mode = (jogMode == joint ? 1 : 0);
-    msg.current_joint = input.joint_current;
-    msg.speed_multiplier = input.speed_multiplier;
-    msg.calibration = 0;
-    msg.singular_matrix = singularMatrix_flag;
-    msg.kinetics_calc_error = kineticsCalcError;
-
-    pub_feedback.publish(msg);
-}
-
-void calculateSpeedCartesian()
-{
-    rover_arm::diffKinematicsCalc srv;
-    bool limiting_flag = 0;
-
-    if (input.vx != 0.0 || input.vy != 0.0 || input.vz != 0.0 || input.va != 0.0)
-    {
-        for (int i = 0; i < NOMBRE_MOTEUR; i++)
-            srv.request.angles[i] = moteurs[i].getAngle();
-
-        srv.request.cmd[0] = input.vx;
-        srv.request.cmd[1] = input.vy;
-        srv.request.cmd[2] = input.vz;
-        srv.request.cmd[3] = input.va;
-
-        if (client_diff_kinetics_calc.call(srv))
-        {
-            singularMatrix_flag = srv.response.singularMatrix;
-            for (int i = 0; i < NOMBRE_MOTEUR; i++)
+            LOCK lock(m_mutex_m_n_current_joint);
+            if (msg.buttons[m_keybind.button_joint_increase] && !m_prev_msg.buttons[m_keybind.button_joint_increase])
             {
-                if (std::abs(srv.response.vitesses[i] > 20))
-                    limiting_flag = 1;
+                m_n_current_joint = ((m_n_current_joint + 1) >= NB_JOINT) ? 0 : m_n_current_joint + 1;
             }
+            if (msg.buttons[m_keybind.button_joint_decrease] && !m_prev_msg.buttons[m_keybind.button_joint_decrease])
+            {
+                m_n_current_joint = ((m_n_current_joint - 1) < 0) ? NB_JOINT - 1 : m_n_current_joint - 1;
+            }
+        }
 
-            if (limiting_flag)
-                speedLimiter(srv.response.vitesses);
-            else
-                for (int i = 0; i < NOMBRE_MOTEUR; i++)
-                    moteurs[i].setPeriod(srv.response.vitesses[i]);
-
-            kineticsCalcError = 0;
+        // Gets which speed mode is selected
+        float f_speed_factor = 0.0f;
+        if (msg.buttons[m_keybind.button_crawler])
+        {
+            f_speed_factor = m_speed_modes.crawler;
+        }
+        else if (msg.buttons[m_keybind.button_fast])
+        {
+            f_speed_factor = m_speed_modes.fast;
         }
         else
-            kineticsCalcError = 1;
+        {
+            f_speed_factor = m_speed_modes.normal;
+        }
+
+        // Initialise msgs and does the necessary calculation
+        rover_arm_msgs::joint_state motor_cmd[NB_JOINT];
+
+        // std::unique_lock<std::mutex> u_lock_watchdog(m_mutex_m_b_watchdog_is_alive);
+        if (msg.buttons[m_keybind.button_enable] && m_b_watchdog_is_alive)
+        {
+            // u_lock_watchdog.unlock();
+            if (m_b_mode_cartesian && m_srv_diff_calc.exists())
+            {
+                // Build request for call
+                rover_arm_msgs::diff_kinematics_calcRequest request;
+                for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
+                {
+                    LOCK lock(m_mutex_m_af_angle);
+                    request.angles[i] = m_af_angle[i];
+                }
+                request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
+                request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
+                request.cmd[2] = msg.axes[m_keybind.axis_cmd_z];
+                if (msg.buttons[m_keybind.button_cmd_a_positive])
+                {
+                    request.cmd[3] = f_speed_factor;
+                }
+                else if (msg.buttons[m_keybind.button_cmd_a_negative])
+                {
+                    request.cmd[3] = -f_speed_factor;
+                }
+                else
+                {
+                    request.cmd[3] = 0.0f;
+                }
+
+                // Calling service
+                rover_arm_msgs::diff_kinematics_calcResponse reponse;
+                if (m_srv_diff_calc.call(request, reponse))
+                {
+                    if (reponse.singularMatrix)
+                    {
+                        ROS_WARN("Singular Matrix; Jog in joint");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
+                        {
+                            motor_cmd[i].speed = (reponse.vitesses[i] * f_speed_factor) /
+                                                 m_speed_modes.speed_cartesian_mode_divider;
+                        }
+
+                        float f_speed_limitor_factor = 1.0f;
+                        for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
+                        {
+                            f_speed_factor = abs(m_af_joint_max_speed[i] / motor_cmd[i].speed);
+                            f_speed_limitor_factor = f_speed_factor < f_speed_limitor_factor ? f_speed_factor : f_speed_limitor_factor;
+                            // ROS_WARN("%d:%d \tJoint Max Speed: %f\tJoint Speed: %f \tSpeed factor: %f",
+                            //  __LINE__,
+                            //  i,
+                            //  m_af_joint_max_speed[i],
+                            //  motor_cmd[i].speed,
+                            //  f_speed_limitor_factor);
+                        }
+
+                        if (f_speed_limitor_factor < 1.0f)
+                        {
+                            for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
+                            {
+                                motor_cmd[i].speed = motor_cmd[i].speed * f_speed_limitor_factor;
+                                ROS_WARN("j%d speed is: %f", i, motor_cmd[i].speed);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    ROS_ERROR("Failed to call diff_calc service, jog in cartesian not available");
+                }
+            }
+            else // Joint Mode
+            {
+                motor_cmd[m_n_current_joint].speed = f_speed_factor * msg.axes[m_keybind.axis_cmd_joint];
+            }
+        }
+        else
+        {
+            //No needs to keep our lock locked
+            // u_lock_watchdog.unlock();
+        }
+
+        // Sending msgs
+        for (int i = 0; i < NB_JOINT; i++)
+        {
+            m_apub_j[i].publish(motor_cmd[i]);
+        }
+
+        m_prev_msg = msg;
     }
-    else
-        for (int i = 0; i < NOMBRE_MOTEUR; i++)
-            moteurs[i].setPeriod(0.0);
-}
 
-void speedLimiter(boost::array<double, 4UL> vitesse)
-{
-    float vitesseLaPlusGrande = std::abs(vitesse[0]);
-
-    for (int i = 1; i < NOMBRE_MOTEUR; i++)
+    void CBJS(const rover_arm_msgs::joint_stateConstPtr &msg, int index)
     {
-        if (std::abs(vitesse[i]) > vitesseLaPlusGrande)
-            vitesseLaPlusGrande = std::abs(vitesse[i]);
+        LOCK lock(m_mutex_m_af_angle);
+        m_af_angle[index] = msg->angle;
     }
 
-    float facteurLimitant = VITESSE_MAX / vitesseLaPlusGrande;
+    void getParams()
+    {
+        std::string str_param_prefix = ros::this_node::getName() + "/";
+        getKeybind(str_param_prefix);
+        getSpeedModes(str_param_prefix);
+        getJointMaxSpeed(str_param_prefix);
+    }
 
-    for (int i = 0; i < NOMBRE_MOTEUR; i++)
-        moteurs[i].setPeriod(vitesse[i] * facteurLimitant);
-}
+    void getKeybind(std::string str_param_prefix)
+    {
+        m_keybind.axis_cmd_x = m_nh.param(str_param_prefix + "cmd_x", 1);
+        m_keybind.axis_cmd_y = m_nh.param(str_param_prefix + "cmd_y", 3);
+        m_keybind.axis_cmd_z = m_nh.param(str_param_prefix + "cmd_z", 0);
+        m_keybind.axis_cmd_joint = m_nh.param(str_param_prefix + "cmd_joint", 1);
 
-void bindKeybindings()
+        m_keybind.button_cmd_a_negative = m_nh.param(str_param_prefix + "cmd_a_negative", 4);
+        m_keybind.button_cmd_a_positive = m_nh.param(str_param_prefix + "cmd_a_positive", 5);
+        m_keybind.button_crawler = m_nh.param(str_param_prefix + "crawler", 1);
+        m_keybind.button_enable = m_nh.param(str_param_prefix + "enable", 4);
+        m_keybind.button_fast = m_nh.param(str_param_prefix + "fast", 5);
+        m_keybind.button_joint_increase = m_nh.param(str_param_prefix + "joint_increase", 2);
+        m_keybind.button_joint_decrease = m_nh.param(str_param_prefix + "joint_decrease", 0);
+        m_keybind.button_control_mode_toggle = m_nh.param(str_param_prefix + "control_mode_toggle", 3);
+        ROS_INFO("Keybind set");
+    }
+
+    void getSpeedModes(std::string str_param_prefix)
+    {
+        m_speed_modes.crawler = m_nh.param(str_param_prefix + "speed_crawler", 0.0f);
+        m_speed_modes.normal = m_nh.param(str_param_prefix + "speed_normal", 5.0f);
+        m_speed_modes.fast = m_nh.param(str_param_prefix + "speed_fast", 0.0f);
+        m_speed_modes.speed_cartesian_mode_divider = m_nh.param(str_param_prefix + "speed_cartesian_mode_divider", 5.0f);
+        ROS_INFO("Speeds set");
+    }
+
+    void getJointMaxSpeed(std::string str_param_prefix)
+    {
+        m_af_joint_max_speed[0] = m_nh.param(str_param_prefix + "max_speed_j0", 10.0);
+        m_af_joint_max_speed[1] = m_nh.param(str_param_prefix + "max_speed_j1", 10.0);
+        m_af_joint_max_speed[2] = m_nh.param(str_param_prefix + "max_speed_j2", 10.0);
+        m_af_joint_max_speed[3] = m_nh.param(str_param_prefix + "max_speed_j3", 10.0);
+    }
+
+    void CBFeedback(const ros::TimerEvent &event)
+    {
+        // Building msg
+        rover_arm_msgs::feedback msg;
+
+        {
+            LOCK lock(m_mutex_m_af_angle);
+            for (int i = 0; i < NB_JOINT; i++)
+            {
+                msg.angles[i] = m_af_angle[i];
+            }
+        }
+
+        {
+            LOCK lock(m_mutex_m_af_speed);
+            for (int i = 0; i < NB_JOINT; i++)
+            {
+                msg.vitesses[i] = m_af_speed[i];
+            }
+        }
+
+        // This is stupid of me but I don't have time to update it. Cartesian
+        // mode in GUI is 0 and joint is 1
+        {
+            LOCK lock(m_mutex_m_b_mode_cartesian);
+            msg.ctrl_mode = static_cast<uint8_t>(!m_b_mode_cartesian);
+        }
+
+        {
+            LOCK lock(m_mutex_m_n_current_joint);
+            msg.current_joint = m_n_current_joint;
+        }
+
+        // Member not defined or used anymore
+        msg.calibration = false;
+        for (int i = 0; i < NB_JOINT; i++)
+        {
+            msg.enable[i] = true;
+        }
+        msg.kinetics_calc_error = false;
+        msg.limiteur = false;
+        msg.singular_matrix = false;
+        msg.speed_multiplier = -69.0f;
+
+        // Sending msg
+        m_pub_feedback.publish(msg);
+    }
+
+    void CBHeartbeat(const std_msgs::EmptyConstPtr &msg)
+    {
+        LOCK lock(m_mutex_m_b_com_is_alive);
+        m_b_com_is_alive = true;
+    }
+
+    void CBResetWatchdog(const ros::TimerEvent &event)
+    {
+        LOCK lock(m_mutex_m_b_com_is_alive);
+        LOCK lock2(m_mutex_m_b_watchdog_is_alive);
+        m_b_watchdog_is_alive = m_b_com_is_alive;
+        m_b_com_is_alive = false;
+    }
+};
+
+int main(int argc, char *argv[])
 {
-    ros::param::get(ros::this_node::getName() + "/a", keybind.a);
-    ros::param::get(ros::this_node::getName() + "/b", keybind.b);
-    ros::param::get(ros::this_node::getName() + "/x", keybind.x);
-    ros::param::get(ros::this_node::getName() + "/y", keybind.y);
-    ros::param::get(ros::this_node::getName() + "/rt", keybind.rt);
-    ros::param::get(ros::this_node::getName() + "/lt", keybind.lt);
-    ros::param::get(ros::this_node::getName() + "/left_joystick_up_down", keybind.left_joystick_up_down);
-    ros::param::get(ros::this_node::getName() + "/left_joystick_left_right", keybind.right_joystick_left_right);
-    ros::param::get(ros::this_node::getName() + "/right_joystick_up_down", keybind.right_joystick_up_down);
-    ros::param::get(ros::this_node::getName() + "/right_joystick_left_right", keybind.right_joystick_left_right);
-    ros::param::get(ros::this_node::getName() + "/arrow_up_down", keybind.arrow_up_down);
-    ros::param::get(ros::this_node::getName() + "/arrow_left_right", keybind.arrow_left_right);
+    ros::init(argc, argv, "arm_master_node");
+    ArmMasterNode arm_master_node;
+    arm_master_node.Run();
+
+    return 0;
 }

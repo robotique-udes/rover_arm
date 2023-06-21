@@ -3,13 +3,13 @@
 import rospy
 import numpy as np
 from numpy.linalg import inv
-from rover_arm.srv import diffKinematicsCalc, diffKinematicsCalcResponse
+from rover_arm_msgs.srv import diff_kinematics_calc, diff_kinematics_calcResponse
 from math import pi as PI
 from numba import jit
 from traceback import print_exc
 import math as m
 
-#@jit(nopython=True) #si tu met pas nopython y'a une coupe de chose qui seront pas optimisé
+@jit(nopython=True) #si tu met pas nopython y'a une coupe de chose qui seront pas optimisé
 def build_jacobienne(q1, q2, q3, q4):
     #grandeur physique (const)
     J1x = 0.0
@@ -79,7 +79,7 @@ def build_jacobienne(q1, q2, q3, q4):
     return j
 
 def handle_diff_kinematics_calc(req):
-    resp = diffKinematicsCalcResponse()
+    resp = diff_kinematics_calcResponse()
 
     commande = np.array([0.0] * 4).T
 
@@ -115,7 +115,7 @@ def angle_rad(angle: float):
 
 def diff_kinematics_calc_server():
     rospy.init_node('diff_kinematics_calc_server')
-    diff_calc_service = rospy.Service('diff_kinematics_calc', diffKinematicsCalc, handle_diff_kinematics_calc)
+    diff_calc_service = rospy.Service('diff_kinematics_calc', diff_kinematics_calc, handle_diff_kinematics_calc)
     rospy.spin()
 
 if __name__ == "__main__":

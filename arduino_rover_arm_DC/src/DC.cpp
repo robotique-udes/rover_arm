@@ -173,10 +173,10 @@ void pubJointState()
 void callbackSrvCalibration(const rover_arm_msg::joint_calibRequest &request,
                             rover_arm_msg::joint_calibResponse &responce)
 {
-    responce.result = false;
+    // responce.result = false;
 
-    // while (/*microswitch not clicked*/ 1)
-    // {
+    // // while (/*microswitch not clicked*/ 1)
+    // // {
 
-    // }
+    // // }
 }
