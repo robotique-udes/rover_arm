@@ -2,9 +2,9 @@
 #include "ros.h"
 #include "DCMotor/DCMotor.hpp"
 #include "PIDRover/PIDRover.hpp"
-#include "rover_arm_msg/desired_joint_state.h"
-#include "rover_arm_msg/joint_state.h"
-#include "rover_arm_msg/joint_calib.h"
+#include "rover_arm_msgs/desired_joint_state.h"
+#include "rover_arm_msgs/joint_state.h"
+#include "rover_arm_msgs/joint_calib.h"
 
 #define BAUD 57600
 #define DRIVE_DIR_PIN 13
@@ -22,9 +22,9 @@
 void rosInit();
 void pid_init();
 void pubJointState();
-void callbackSubDesiredJointState(const rover_arm_msg::desired_joint_state &msg);
-void callbackSrvCalibration(const rover_arm_msg::joint_calibRequest &request,
-                            rover_arm_msg::joint_calibResponse &responce);
+void callbackSubDesiredJointState(const rover_arm_msgs::joint_state &msg);
+// void callbackSrvCalibration(const rover_arm_msgs::joint_calibRequest &request,
+//                             rover_arm_msgs::joint_calibResponse &responce);
 
 
 ros::NodeHandle n;
@@ -32,15 +32,15 @@ ros::NodeHandle n;
 rover_arm_lib::PIDRover pid(KP, KI, KD);
 rover_arm_lib::DCMotor *dc_motor_ptr = NULL;
 
-rover_arm_msg::joint_state joint_state_msg;
+rover_arm_msgs::joint_state joint_state_msg;
 ros::Publisher pub_joint_state("arm/j1/JS", &joint_state_msg);
-ros::Subscriber<rover_arm_msg::desired_joint_state> sub_desired_joint_state("arm/j1/DSJ",
+ros::Subscriber<rover_arm_msgs::joint_state> sub_desired_joint_state("arm/j1/DSJ",
                                                                             callbackSubDesiredJointState,
                                                                             1);
 
-ros::ServiceServer<rover_arm_msg::joint_calibRequest,
-                   rover_arm_msg::joint_calibResponse>
-    srv_calibration("calibration", callbackSrvCalibration);
+// ros::ServiceServer<rover_arm_msgs::joint_calibRequest,
+//                    rover_arm_msgs::joint_calibResponse>
+//     srv_calibration("calibration", callbackSrvCalibration);
 
 bool PID_bypass = 0;
 
@@ -84,8 +84,8 @@ void rosInit()
     n.initNode();
     n.subscribe(sub_desired_joint_state);
     n.advertise(pub_joint_state);
-    n.advertiseService<rover_arm_msg::joint_calibRequest,
-                       rover_arm_msg::joint_calibResponse>(srv_calibration);
+    // n.advertiseService<rover_arm_msgs::joint_calibRequest,
+    //                    rover_arm_msgs::joint_calibResponse>(srv_calibration);
     n.negotiateTopics();
     n.spinOnce();
 }
@@ -97,7 +97,7 @@ void pid_init()
     pid.SetMode(AUTOMATIC);
 }
 
-void callbackSubDesiredJointState(const rover_arm_msg::desired_joint_state &msg)
+void callbackSubDesiredJointState(const rover_arm_msgs::joint_state &msg)
 {
     if (dc_motor_ptr == NULL)
     {
@@ -105,56 +105,28 @@ void callbackSubDesiredJointState(const rover_arm_msg::desired_joint_state &msg)
         return;
     }
 
-    switch (msg.control_mode)
+    PID_bypass = 0;
+    if (abs(msg.speed) < 0.05f)
     {
-    case msg.PWM_MODE:
-        PID_bypass = 1;
-
-        if (msg.pwm > 0.0f)
-        {
-            dc_motor_ptr->setDirection(DIRECTION_POSITIVE);
-        }
-        if (msg.pwm < 0.0f)
-        {
-            dc_motor_ptr->setDirection(DIRECTION_NEGATIVE);
-        }
-
-        dc_motor_ptr->setPWM(abs(msg.pwm));
-        break;
-
-    case msg.PID_MODE:
-        PID_bypass = 0;
-        if (abs(msg.speed) < 0.05f)
-        {
-            PID_bypass = 1;
-            dc_motor_ptr->setPWM(0);
-            pid.setTargetSpeed(0.0f);
-            break;
-        }
-
-        if (msg.speed > 0.0f)
-        {
-            dc_motor_ptr->setDirection(DIRECTION_POSITIVE);
-        }
-        if (msg.speed < 0.0f)
-        {
-            dc_motor_ptr->setDirection(DIRECTION_NEGATIVE);
-        }
-        pid.setTargetSpeed(static_cast<double>(abs(msg.speed)));
-
-        break;
-
-    default:
         PID_bypass = 1;
         dc_motor_ptr->setPWM(0);
-        n.logerror("Control mode not sent with message, motor stopped");
-        break;
+        pid.setTargetSpeed(0.0f);
+        return;
     }
+    else if (msg.speed > 0.0f)
+    {
+        dc_motor_ptr->setDirection(DIRECTION_POSITIVE);
+    }
+    else if (msg.speed < 0.0f)
+    {
+        dc_motor_ptr->setDirection(DIRECTION_NEGATIVE);
+    }
+    pid.setTargetSpeed(static_cast<double>(abs(msg.speed)));
 }
 
 void pubJointState()
 {
-    rover_arm_msg::joint_state msg;
+    rover_arm_msgs::joint_state msg;
     if (dc_motor_ptr != NULL)
     {
         msg.angle = dc_motor_ptr->getAngle();
@@ -170,8 +142,8 @@ void pubJointState()
     pub_joint_state.publish(&msg);
 }
 
-void callbackSrvCalibration(const rover_arm_msg::joint_calibRequest &request,
-                            rover_arm_msg::joint_calibResponse &responce)
+void callbackSrvCalibration(const rover_arm_msgs::joint_calibRequest &request,
+                            rover_arm_msgs::joint_calibResponse &responce)
 {
     // responce.result = false;
 
