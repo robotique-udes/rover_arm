@@ -33,8 +33,8 @@ rover_arm_lib::PIDRover pid(KP, KI, KD);
 rover_arm_lib::DCMotor *dc_motor_ptr = NULL;
 
 rover_arm_msg::joint_state joint_state_msg;
-ros::Publisher pub_joint_state("joint_state", &joint_state_msg);
-ros::Subscriber<rover_arm_msg::desired_joint_state> sub_desired_joint_state("desired_joint_state",
+ros::Publisher pub_joint_state("arm/j1/JS", &joint_state_msg);
+ros::Subscriber<rover_arm_msg::desired_joint_state> sub_desired_joint_state("arm/j1/DSJ",
                                                                             callbackSubDesiredJointState,
                                                                             1);
 
