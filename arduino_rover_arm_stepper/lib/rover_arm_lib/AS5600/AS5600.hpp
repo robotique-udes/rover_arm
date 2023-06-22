@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "MovingAverage/MovingAverage.hpp"
 #include "ros.h"
-#include "rover_arm_msg/encoder_status.h"
+#include "rover_arm_msgs/encoder_status.h"
 #include <Wire.h>
 
 #define REVERSE_DIRECTION
