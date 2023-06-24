@@ -1,13 +1,16 @@
 <?xml version='1.0'?>
 <launch>
-    <!-- <machine name="rover" address="192.168.1.50" env-loader="$(env ROS_ROOT)/../../env.sh" user="rovus" password="rovus"/> -->
-    <machine name="base" address="localhost" env-loader="$(env ROS_ROOT)/../../env.sh" default="true"/>
+
+    <arg name="local_only" default="false" />
+    <include file="$(find rover_control)/launch/machine_config.launch">
+        <arg name="local_only" value="$(arg local_only)" />
+    </include>
 
     <group ns="arm">
-        <node name="watchdog" pkg="rover_arm" type="joint_watchdog" output="screen" />
 
         <group ns="j0">
-            <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+            <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py"
+                output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0" />
             </node>
         </group>
