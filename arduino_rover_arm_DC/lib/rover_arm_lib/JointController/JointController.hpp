@@ -3,8 +3,8 @@
 #include <Arduino.h>
 #include "ros.h"
 #include "PIDRover/PIDRover.hpp"
-#include "rover_arm_msg/desired_joint_state.h"
-#include "rover_arm_msg/joint_state.h"
+#include "rover_arm_msgs/desired_joint_state.h"
+#include "rover_arm_msgs/joint_state.h"
 #include "DCMotor/DCMotor.hpp"
 
 #define STOPPED 0
@@ -20,7 +20,7 @@ namespace rover_arm_lib
 
         PIDRover pid;
         ros::Publisher pub_joint_state;
-        rover_arm_msg::joint_state joint_state_msg;
+        rover_arm_msgs::joint_state joint_state_msg;
 
         bool pid_state = STOPPED;
 
@@ -38,7 +38,7 @@ namespace rover_arm_lib
         void startPID(){pid.SetMode(AUTOMATIC); pid_state = RUNNING;}
         void stopPID(){pid.SetMode(MANUAL); pid_state = STOPPED;}
 
-        void callback_desired_joint_state(rover_arm_msg::desired_joint_state &msg);
+        void callback_desired_joint_state(rover_arm_msgs::desired_joint_state &msg);
 
     };
 }
