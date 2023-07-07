@@ -22,6 +22,7 @@
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>rover_arm_msgs</build_export_depend>
+  <build_export_depend>rover_control_msgs</build_export_depend>
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>roscpp</exec_depend>

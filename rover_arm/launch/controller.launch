@@ -12,8 +12,7 @@
             <rosparam file="$(find rover_arm)/config/speeds.yaml" />
         </node>
 
-        <!--Lancer
-        le service de calcul en cartésien-->
+        <!--Lancer le service de calcul en cartésien-->
         <node machine="rover" name="arm_diff_kinetics_calc_server" pkg="rover_arm"
             type="diff_kinetics_calc_server.py" />
     </group>
