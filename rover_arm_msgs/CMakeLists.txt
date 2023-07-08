@@ -23,9 +23,8 @@ add_service_files(
 
 generate_messages(
   DEPENDENCIES
-  # std_msgs
 )
 
 catkin_package(
-  #  CATKIN_DEPENDS
+  CATKIN_DEPENDS message_generation
 )
