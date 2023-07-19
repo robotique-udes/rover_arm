@@ -7,7 +7,7 @@
 
     <group ns="arm">
 
-        <group ns="j0">
+        <!-- <group ns="j0">
             <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py"
                 output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0" />
@@ -18,7 +18,7 @@
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0" />
             </node>
-        </group>
+        </group> -->
 
         <!-- <group ns="j2">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
@@ -33,5 +33,10 @@
         </group> -->
 
     </group>
+
+    <!-- Starts communication with the Dynamixel motors and loads the motor configuration -->
+    <node name="dynamixel_interface_node" pkg="dynamixel_interface" type="dynamixel_interface_controller_node" output="screen">
+        <rosparam command="load" file="$(find rover_arm)/config/dynamixel.yaml" />
+    </node>
 
 </launch>

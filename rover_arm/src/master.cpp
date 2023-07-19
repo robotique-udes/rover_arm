@@ -5,6 +5,7 @@
 #include "rover_arm_msgs/diff_kinematics_calc.h"
 #include "rover_arm_msgs/feedback.h"
 #include "std_msgs/Empty.h"
+#include "sensor_msgs/JointState.h"
 
 #define IN
 #define OUT
@@ -19,6 +20,9 @@ struct Keybinds
     int axis_cmd_y;
     int axis_cmd_z;
     int axis_cmd_joint;
+    int axis_cmd_gripper_rot;
+    int axis_cmd_gripper_grip;
+
     int button_cmd_a_positive;
     int button_cmd_a_negative;
     int button_crawler;
@@ -63,6 +67,9 @@ public:
                                                                      1,
                                                                      boost::bind(&ArmMasterNode::CBJS, this, _1, i));
         }
+
+        // Initialising publisher for dynamixels
+        m_pub_dynamixel = m_nh.advertise<sensor_msgs::JointState>("/desired_joint_states", 1);
 
         // Initialising joy subscriber
         // Needs to initialise with column of zeros otherwise indexes will be
@@ -109,6 +116,8 @@ private:
     ros::Subscriber m_sub_joy;
     ros::Subscriber m_asub_j[NB_JOINT];
     ros::Publisher m_apub_j[NB_JOINT];
+    ros::Publisher m_pub_dynamixel;
+
     ros::ServiceClient m_srv_diff_calc;
     ros::Publisher m_pub_feedback;
     ros::Timer m_timer_feedback;
@@ -181,6 +190,9 @@ private:
 
         // Initialise msgs and does the necessary calculation
         rover_arm_msgs::joint_state motor_cmd[NB_JOINT];
+        sensor_msgs::JointState motor_cmd_dynamixel;
+        motor_cmd_dynamixel.name = {"gripper_rotation", "gripper_grip"};
+        motor_cmd_dynamixel.velocity = {0.0f, 0.0f};
 
         // std::unique_lock<std::mutex> u_lock_watchdog(m_mutex_m_b_watchdog_is_alive);
         if (msg.buttons[m_keybind.button_enable] && m_b_watchdog_is_alive)
@@ -232,12 +244,6 @@ private:
                         {
                             f_speed_factor = abs(m_af_joint_max_speed[i] / motor_cmd[i].speed);
                             f_speed_limitor_factor = f_speed_factor < f_speed_limitor_factor ? f_speed_factor : f_speed_limitor_factor;
-                            // ROS_WARN("%d:%d \tJoint Max Speed: %f\tJoint Speed: %f \tSpeed factor: %f",
-                            //  __LINE__,
-                            //  i,
-                            //  m_af_joint_max_speed[i],
-                            //  motor_cmd[i].speed,
-                            //  f_speed_limitor_factor);
                         }
 
                         if (f_speed_limitor_factor < 1.0f)
@@ -259,6 +265,10 @@ private:
             {
                 motor_cmd[m_n_current_joint].speed = f_speed_factor * msg.axes[m_keybind.axis_cmd_joint];
             }
+
+            //Last two joints
+            motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal*msg.axes[m_keybind.axis_cmd_gripper_rot];
+            motor_cmd_dynamixel.velocity[1] = m_speed_modes.normal*msg.axes[m_keybind.axis_cmd_gripper_grip];
         }
         else
         {
@@ -272,6 +282,7 @@ private:
             m_apub_j[i].publish(motor_cmd[i]);
         }
 
+        m_pub_dynamixel.publish(motor_cmd_dynamixel);
         m_prev_msg = msg;
     }
 
@@ -295,6 +306,8 @@ private:
         m_keybind.axis_cmd_y = m_nh.param(str_param_prefix + "cmd_y", 3);
         m_keybind.axis_cmd_z = m_nh.param(str_param_prefix + "cmd_z", 0);
         m_keybind.axis_cmd_joint = m_nh.param(str_param_prefix + "cmd_joint", 1);
+        m_keybind.axis_cmd_gripper_rot = m_nh.param(str_param_prefix + "cmd_gripper_rot", 6);
+        m_keybind.axis_cmd_gripper_grip = m_nh.param(str_param_prefix + "cmd_gripper_grip", 7);
 
         m_keybind.button_cmd_a_negative = m_nh.param(str_param_prefix + "cmd_a_negative", 4);
         m_keybind.button_cmd_a_positive = m_nh.param(str_param_prefix + "cmd_a_positive", 5);
