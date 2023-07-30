@@ -7,8 +7,8 @@
 
 #define DISABLE 1
 #define ENABLE 0
-#define DIR_POSITIVE 0
-#define DIR_NEGATIVE 1
+#define DIR_POSITIVE 1
+#define DIR_NEGATIVE 0
 
 namespace rover_arm_lib
 {

@@ -5,6 +5,7 @@
 #include "rover_arm_msgs/joint_state.h"
 #include "rover_arm_msgs/watchdog.h"
 #include "rover_arm_msgs/joint_calib.h"
+#include "std_msgs/Float32.h"
 
 #define OPEN_LOOP 1
 #define GEARBOX 77
@@ -26,8 +27,7 @@ void isrStepper();
 void cancelExecution();
 void callbackWatchdog(const rover_arm_msgs::watchdog &data);
 void callbackDesiredJointState(const rover_arm_msgs::joint_state &data);
-void callbackSrvCalibration(const rover_arm_msgs::joint_calibRequest &request,
-                            rover_arm_msgs::joint_calibResponse &responce);
+void callbackCalibration(const std_msgs::Float32 &msg);
 
 bool watchdog_connected = false;
 rover_arm_lib::StepperMotor *p_stepper = NULL;
@@ -44,13 +44,12 @@ void setup()
                                                                         callbackDesiredJointState,
                                                                         1);
     ros::Subscriber<rover_arm_msgs::watchdog> sub_watchdog("/arm/JWD", callbackWatchdog, 1); // joint_watchdog
-    ros::ServiceServer<rover_arm_msgs::joint_calibRequest, rover_arm_msgs::joint_calibResponse> server_calib(PARAM_HEAD_STRING "C",
-                                                                                                           callbackSrvCalibration);
+    ros::Subscriber<std_msgs::Float32> server_calib(PARAM_HEAD_STRING "C", callbackCalibration);
 
     n.advertise(pub_joint_state);
     n.subscribe(sub_watchdog);
     n.subscribe(sub_desired_joint_state);
-    n.advertiseService(server_calib);
+    n.subscribe(server_calib);
     n.negotiateTopics();
     n.spinOnce();
 
@@ -127,13 +126,7 @@ void callbackDesiredJointState(const rover_arm_msgs::joint_state &data)
     p_stepper->setSpeed(data.speed);
 }
 
-void callbackSrvCalibration(const rover_arm_msgs::joint_calibRequest &request,
-                            rover_arm_msgs::joint_calibResponse &responce)
+void callbackCalibration(const std_msgs::Float32 &msg)
 {
-    responce.result = false;
-    p_stepper->setZero();
-    // while (/*microswitch not clicked*/ 1)
-    // {
-
-    // }
+    p_stepper->setZero(msg.data);
 }

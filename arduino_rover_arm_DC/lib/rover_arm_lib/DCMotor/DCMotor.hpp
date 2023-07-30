@@ -22,5 +22,6 @@ namespace rover_arm_lib
         float getAngle() {return static_cast<float>(encoder.getAngle());}
         void setZero(float shift = 0.0f) {encoder.setZero(shift);};
         float getSpeed() {return -current_speed;}
+        bool getDirection() {return curr_direction;}
     };
 }

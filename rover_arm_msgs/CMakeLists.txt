@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   encoder_status.msg
-  desired_joint_state.msg
+  PID.msg
   joint_state.msg
   watchdog.msg
   feedback.msg

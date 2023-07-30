@@ -5,11 +5,13 @@ rover_arm_lib::DCMotor::DCMotor(ros::NodeHandle *node_handle_ptr, short PWM,
                                 const short dir, const short I2C)
     : encoder(node_handle_ptr, out, dir, I2C)
 {
-    PWM_PIN = PWM;
-    analogWrite(PWM_PIN, 0);
-
     DIR_PIN = DIR;
+    PWM_PIN = PWM;
     pinMode(DIR_PIN, OUTPUT);
+
+     // Making sure motor is at full stop 
+    digitalWrite(DIR_PIN, false);
+    analogWrite(PWM_PIN, 0);
 }
 
 void rover_arm_lib::DCMotor::setDirection(bool direction)

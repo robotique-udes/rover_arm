@@ -15,14 +15,20 @@ ports:
 
   # PORT LIST
   - name: Port_1               # name for this port in config
-    device: /dev/ttyUSB0       # serial device this port will communicate on
+    device: /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT7W91PQ-if00-port0     # serial device this port will communicate on
     baudrate: 57600            # baudrate in use
     use_legacy_protocol: false # wether to use new 2.0 protocol (false) or legacy 1.0 protocol (true)
     group_read_enabled: true   # specify whether to use group comms for reading
     group_write_enabled: true  # specify whether to use group comms for writing
     servos:
         # SERVO LIST FOR THIS PORT
-        - id: 1
+        - id: 3
+          joint_name: gripper_rotation
+          zero_pos: 2048
+          min_pos: 0
+          max_pos: 4095
+
+        - id: 10
           joint_name: gripper_grip
           zero_pos: 2048
           min_pos: 0

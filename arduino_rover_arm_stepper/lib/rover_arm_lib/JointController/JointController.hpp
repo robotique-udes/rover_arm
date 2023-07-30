@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include "ros.h"
 #include "PIDRover/PIDRover.hpp"
-#include "rover_arm_msgs/desired_joint_state.h"
 #include "rover_arm_msgs/joint_state.h"
 #include "DCMotor/DCMotor.hpp"
 
@@ -37,8 +36,5 @@ namespace rover_arm_lib
         void setPIDRate(int rate){pid.SetSampleTime(rate);}
         void startPID(){pid.SetMode(AUTOMATIC); pid_state = RUNNING;}
         void stopPID(){pid.SetMode(MANUAL); pid_state = STOPPED;}
-
-        void callback_desired_joint_state(rover_arm_msgs::desired_joint_state &msg);
-
     };
 }

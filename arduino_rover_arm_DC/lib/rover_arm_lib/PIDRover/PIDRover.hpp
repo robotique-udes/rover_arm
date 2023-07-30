@@ -14,7 +14,7 @@ namespace rover_arm_lib
 
         public:
             PIDRover(float Kp, float Ki, float Kd);
-            void setTargetSpeed(float new_speed){target_speed = new_speed;}
+            void setTargetSpeed(float new_speed) {target_speed = new_speed;}
             void setCurrentSpeed(float speed) {abs_current_speed = static_cast<double>(abs(speed));}
             float getCommand(){return static_cast<float>(command);}
     };

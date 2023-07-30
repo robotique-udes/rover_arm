@@ -13,5 +13,5 @@ crawler: 0
 enable: 4
 fast: 5
 joint_increase: 1
-joint_decrease: 0
+joint_decrease: 2
 control_mode_toggle: 3

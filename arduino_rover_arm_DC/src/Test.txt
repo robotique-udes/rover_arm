@@ -1,0 +1,34 @@
+#include <Arduino.h>
+
+#define DRIVE_DIR_PIN 13
+#define DRIVE_PWM_PIN 6
+
+
+void setup(void)
+{
+    Serial.begin(57600);
+    pinMode(DRIVE_DIR_PIN, OUTPUT);
+    // analogWrite(DRIVE_PWM_PIN, 180);
+
+    digitalWrite(DRIVE_DIR_PIN, true);
+    for(int i = 0; i < 256;i++)
+    {
+        Serial.print("Trying with PWM = ");
+        Serial.println(i);
+        analogWrite(DRIVE_PWM_PIN, 255-i);
+
+        delay(50);
+    }
+
+    digitalWrite(DRIVE_DIR_PIN, false);
+    for(int i = 0; i < 256;i++)
+    {
+        Serial.print("Trying with PWM = ");
+        Serial.println(255-i);
+        analogWrite(DRIVE_PWM_PIN, 255-i);
+
+        delay(50);
+    }
+
+    for (;;);
+}

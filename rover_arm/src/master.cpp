@@ -209,7 +209,7 @@ private:
                 }
                 request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
                 request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
-                request.cmd[2] = msg.axes[m_keybind.axis_cmd_z];
+                request.cmd[2] = -msg.axes[m_keybind.axis_cmd_z];
                 if (msg.buttons[m_keybind.button_cmd_a_positive])
                 {
                     request.cmd[3] = f_speed_factor;
@@ -251,7 +251,6 @@ private:
                             for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
                             {
                                 motor_cmd[i].speed = motor_cmd[i].speed * f_speed_limitor_factor;
-                                ROS_WARN("j%d speed is: %f", i, motor_cmd[i].speed);
                             }
                         }
                     }
@@ -268,7 +267,7 @@ private:
 
             //Last two joints
             motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal*msg.axes[m_keybind.axis_cmd_gripper_rot];
-            motor_cmd_dynamixel.velocity[1] = m_speed_modes.normal*msg.axes[m_keybind.axis_cmd_gripper_grip];
+            motor_cmd_dynamixel.velocity[1] = m_speed_modes.crawler*msg.axes[m_keybind.axis_cmd_gripper_grip];
         }
         else
         {

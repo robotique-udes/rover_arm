@@ -31,6 +31,10 @@ add_executable(master src/master.cpp)
 add_dependencies(master ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(master ${catkin_LIBRARIES})
 
+add_executable(PID_tuning_node src/PID_tuning_node.cpp)
+add_dependencies(PID_tuning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(PID_tuning_node ${catkin_LIBRARIES})
+
 
 add_executable(joint_watchdog src/joint_watchdog.cpp)
 add_dependencies(joint_watchdog ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
