@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "rover_arm_msgs/joint_state.h"
-#include "rover_arm_msgs/desired_joint_state.h"
+#include "rover_arm_msgs/PID.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     ros::Subscriber sub_JS = n.subscribe<rover_arm_msgs::joint_state>("/arm/j1/JS", 1, CBJS);
     ros::Subscriber sub_DJS = n.subscribe<rover_arm_msgs::joint_state>("/arm/j1/DJS", 1, CBDJS);
-    ros::Publisher  pub_PID = n.advertise<rover_arm_msgs::desired_joint_state>("/arm/j1/PID", 1);
+    ros::Publisher  pub_PID = n.advertise<rover_arm_msgs::PID>("/arm/j1/PID", 1);
 
     float results[20][2] = {0};
     float KI = 0;
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     {
         float KI = static_cast<float>(140 + i*10);
 
-        rover_arm_msgs::desired_joint_state pid_coeff;
+        rover_arm_msgs::PID pid_coeff;
         pid_coeff.kP = 15.0f;
         pid_coeff.kI = KI;
         pid_coeff.kD = 0.0f;
