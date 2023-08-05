@@ -5,7 +5,7 @@
         <arg name="local_only" value="$(arg local_only)" />
     </include>
 
-    <arg name="usb_id_prefix" default="1" />
+    <arg name="usb_id_prefix" default="3" />
 
     <group ns="arm">
 
@@ -28,11 +28,11 @@
             </node>
         </group>
 
-        <!-- <group ns="j3">
+        <group ns="j3">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.3:1.0-port0" />
             </node>
-        </group> -->
+        </group>
 
         <node name="joint_watchdog" pkg="rover_arm" type="joint_watchdog" output="screen" />
 

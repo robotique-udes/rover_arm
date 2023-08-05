@@ -69,6 +69,8 @@ void setup()
     pid_init();
 
     // n.loginfo("ros initated");
+    dc_motor.setDirection(DIRECTION_POSITIVE);
+    stop();
     delay(1000);
 
     unsigned long prev_pub_time = millis();

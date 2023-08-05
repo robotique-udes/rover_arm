@@ -5,7 +5,7 @@
 #include "rover_arm_msgs/encoder_status.h"
 #include <Wire.h>
 
-#define REVERSE_DIRECTION
+// #define REVERSE_DIRECTION
 
 #define RELATIVE 0
 #define ABSOLUTE 1
