@@ -5,30 +5,32 @@
         <arg name="local_only" value="$(arg local_only)" />
     </include>
 
+    <arg name="usb_id_prefix" default="1" />
+
     <group ns="arm">
 
         <group ns="j0">
             <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py"
-                output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.3.1:1.0-port0" />
+                output="screen">                              
+                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.1:1.0-port0" />
             </node>
         </group>
 
         <group ns="j1">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.3.4:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.4:1.0-port0" />
             </node>
         </group>
 
         <group ns="j2">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.3.2:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.2:1.0-port0" />
             </node>
         </group>
 
         <!-- <group ns="j3">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:3.3.3:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.3:1.0-port0" />
             </node>
         </group> -->
 
@@ -37,8 +39,8 @@
     </group>
 
     <!-- Starts communication with the Dynamixel motors and loads the motor configuration -->
-    <node name="dynamixel_interface_node" pkg="dynamixel_interface" type="dynamixel_interface_controller_node" output="screen">
+    <!-- <node name="dynamixel_interface_node" pkg="dynamixel_interface" type="dynamixel_interface_controller_node" output="screen">
         <rosparam command="load" file="$(find rover_arm)/config/dynamixel.yaml" />
-    </node>
+    </node> -->
 
 </launch>
