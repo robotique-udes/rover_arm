@@ -5,32 +5,32 @@
         <arg name="local_only" value="$(arg local_only)" />
     </include>
 
-    <arg name="usb_id_prefix" default="1" />
+    <arg name="usb_id_prefix" default="platform-3610000.xhci-usb-0:2.2.4.4" />
 
     <group ns="arm">
 
         <group ns="j0">
             <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py"
                 output="screen">                              
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.1:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.1:1.0-port0" />
             </node>
         </group>
 
         <group ns="j1">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.4:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.4:1.0-port0" />
             </node>
         </group>
 
         <group ns="j2">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.2:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.2:1.0-port0" />
             </node>
         </group>
 
         <group ns="j3">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/pci-0000:00:14.0-usb-0:$(arg usb_id_prefix).3.3:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/arg usb_id_prefix).3.3:1.0-port0" />
             </node>
         </group>
 
