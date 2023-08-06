@@ -207,7 +207,7 @@ private:
                 }
                 request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
                 request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
-                request.cmd[2] = msg.axes[m_keybind.axis_cmd_z];
+                request.cmd[2] = -msg.axes[m_keybind.axis_cmd_z];
 
                 // Calling service
                 rover_arm_msgs::diff_kinematics_calcResponse reponse;
@@ -225,8 +225,8 @@ private:
                                                  m_speed_modes.speed_cartesian_mode_divider;
                         }
 
-                        // 
-                        motor_cmd[3].speed = -motor_cmd[1].speed;
+                        motor_cmd[3].speed = motor_cmd[1].speed;
+                        motor_cmd[2].speed *= -1; 
 
                         float f_speed_limitor_factor = 1.0f;
                         for (int i = 0; i < NB_JOINT_CARTESIAN_MODE + 1; i++)
@@ -257,11 +257,11 @@ private:
             // Last 3 joints
             if (msg.buttons[m_keybind.button_cmd_a_positive])
             {
-                motor_cmd[3].speed += m_speed_modes.normal;
+                motor_cmd[3].speed += m_speed_modes.fast;
             }
             else if (msg.buttons[m_keybind.button_cmd_a_negative])
             {
-                motor_cmd[3].speed -= m_speed_modes.normal;
+                motor_cmd[3].speed -= m_speed_modes.fast;
             }
 
             motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal * msg.axes[m_keybind.axis_cmd_gripper_rot];

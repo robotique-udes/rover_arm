@@ -3,8 +3,8 @@ cmd_x: 1
 cmd_y: 3
 cmd_z: 0
 cmd_joint: 1
-cmd_gripper_rot: 6
-cmd_gripper_grip: 7
+cmd_gripper_rot: 5
+cmd_gripper_grip: 4
 
 #buttons
 cmd_a_positive: 11
