@@ -8,14 +8,14 @@
 #include "std_msgs/Float32.h"
 
 #define OPEN_LOOP 1
-#define GEARBOX 77
+#define GEARBOX 99
 #define STEP_PER_TURN 1600
 #define PWM 6
 #define DIR 13
 #define EN 4
 #define ENCODER 14
 
-#define JOINT_NB "j0"
+#define JOINT_NB "j3"
 #define PARAM_HEAD_STRING "/arm/" JOINT_NB "/" // Set joint number here
 #define BAUD 57600
 
@@ -91,7 +91,7 @@ void setup()
 
             rover_arm_msgs::joint_state msg;
             msg.speed = stepper.getSpeed();
-            msg.angle = stepper.getAngle();
+            msg.angle = -stepper.getAngle();
             pub_joint_state.publish(&msg);
         }
     }

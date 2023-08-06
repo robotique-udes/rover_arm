@@ -64,8 +64,8 @@ public:
         for (int i = 0; i < NB_JOINT; i++)
         {
             m_asub_j[i] = m_nh.subscribe<rover_arm_msgs::joint_state>("/arm/j" + std::to_string(i) + "/JS",
-                                                                     1,
-                                                                     boost::bind(&ArmMasterNode::CBJS, this, _1, i));
+                                                                      1,
+                                                                      boost::bind(&ArmMasterNode::CBJS, this, _1, i));
         }
 
         // Initialising publisher for dynamixels
@@ -94,7 +94,7 @@ public:
 
         ROS_INFO("%s node is ready", ros::this_node::getName().c_str());
     }
-    
+
     // =========================================================================
     // Public methods
     // =========================================================================
@@ -207,7 +207,7 @@ private:
                     LOCK lock(m_mutex_m_af_angle);
                     request.angles[i] = m_af_angle[i];
                 }
-                request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
+                request.cmd[0] = -msg.axes[m_keybind.axis_cmd_x];
                 request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
                 request.cmd[2] = -msg.axes[m_keybind.axis_cmd_z];
                 if (msg.buttons[m_keybind.button_cmd_a_positive])
@@ -239,6 +239,12 @@ private:
                                                  m_speed_modes.speed_cartesian_mode_divider;
                         }
 
+                        // ROS_WARN("CMD reponse= %f, %f, %f, %f",
+                        //          reponse.vitesses[0],
+                        //          reponse.vitesses[1],
+                        //          reponse.vitesses[2],
+                        //          reponse.vitesses[3]);
+
                         float f_speed_limitor_factor = 1.0f;
                         for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
                         {
@@ -265,14 +271,14 @@ private:
                 motor_cmd[m_n_current_joint].speed = f_speed_factor * msg.axes[m_keybind.axis_cmd_joint];
             }
 
-            //Last two joints
-            motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal*msg.axes[m_keybind.axis_cmd_gripper_rot];
-            motor_cmd_dynamixel.velocity[1] = m_speed_modes.crawler*msg.axes[m_keybind.axis_cmd_gripper_grip];
+            // Last two joints
+            motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal * msg.axes[m_keybind.axis_cmd_gripper_rot];
+            motor_cmd_dynamixel.velocity[1] = m_speed_modes.crawler * msg.axes[m_keybind.axis_cmd_gripper_grip];
         }
         else
         {
-            //No needs to keep our lock locked
-            // u_lock_watchdog.unlock();
+            // No needs to keep our lock locked
+            //  u_lock_watchdog.unlock();
         }
 
         // Sending msgs

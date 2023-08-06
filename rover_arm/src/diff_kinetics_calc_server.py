@@ -13,19 +13,19 @@ import math as m
 def build_jacobienne(q1, q2, q3, q4):
     #grandeur physique (const)
     J1x = 0.0
-    J1y = 0.2
+    J1y = 0.423
     J1z = 0.0
 
     J2x = 0.0
-    J2y = 0.5
+    J2y = 0.41
     J2z = 0.0
 
     J3x = 0.0
-    J3y = 0.5
+    J3y = 0.407
     J3z = 0.0
 
     J4x = 0.0
-    J4y = 0.25
+    J4y = 0.286
     J4z = 0.0
 
     #Initialisation de la jacobienne

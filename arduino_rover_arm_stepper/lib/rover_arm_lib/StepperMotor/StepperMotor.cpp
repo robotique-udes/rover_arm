@@ -58,5 +58,5 @@ void StepperMotor::setSpeed(float speed)
 
 void StepperMotor::setZero(float shift)
 {
-    step_counter = static_cast<unsigned long>(shift*step_per_deg); 
+    step_counter = static_cast<long>(shift*step_per_deg); 
 }

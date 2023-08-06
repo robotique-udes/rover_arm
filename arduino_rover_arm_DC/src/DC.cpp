@@ -41,9 +41,9 @@ rover_arm_lib::PIDRover pid(KP, KI, KD);
 rover_arm_lib::DCMotor *dc_motor_ptr = NULL;
 
 rover_arm_msgs::joint_state joint_state_msg;
-ros::Publisher pub_joint_state("JS", &joint_state_msg);
+ros::Publisher pub_joint_state("/arm/j1/JS", &joint_state_msg);
 ros::Subscriber<rover_arm_msgs::watchdog> sub_watchdog("/arm/JWD", callbackWatchdog, 1); // joint_watchdog
-ros::Subscriber<rover_arm_msgs::joint_state> sub_desired_joint_state("DJS",
+ros::Subscriber<rover_arm_msgs::joint_state> sub_desired_joint_state("/arm/j1/DJS",
                                                                      callbackSubDesiredJointState,
                                                                      1);
 // ros::ServiceServer<rover_arm_msgs::joint_calibRequest,
@@ -51,7 +51,7 @@ ros::Subscriber<rover_arm_msgs::joint_state> sub_desired_joint_state("DJS",
 //     srv_calibration_server("C", callbackSrvCalibration);
 
 ros::Subscriber<rover_arm_msgs::PID> sub_pid_values("PID", callbackSPIDValues, 1);
-ros::Subscriber<std_msgs::Float32> sub_calibration("C", callbackCalibration, 1);
+ros::Subscriber<std_msgs::Float32> sub_calibration("/arm/j1/C", callbackCalibration, 1);
 
 bool PID_bypass = 0;
 
