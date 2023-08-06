@@ -1,5 +1,5 @@
-float64[4] angles
-float64[4] cmd
+float64[3] angles
+float64[3] cmd
 ---
-float64[4] vitesses
+float64[3] vitesses
 bool singularMatrix

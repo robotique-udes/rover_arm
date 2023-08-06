@@ -8,7 +8,7 @@
     <group ns="arm">
         <!-- Master node -->
         <node machine="rover" name="arm_master" pkg="rover_arm" type="master" output="screen">
-            <rosparam file="$(find rover_arm)/config/controller_logitech.yaml" />
+            <rosparam file="$(find rover_arm)/config/controller_alex.yaml" />
             <rosparam file="$(find rover_arm)/config/speeds.yaml" />
         </node>
 

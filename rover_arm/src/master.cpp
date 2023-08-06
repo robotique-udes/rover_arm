@@ -11,7 +11,7 @@
 #define OUT
 
 #define NB_JOINT 6
-#define NB_JOINT_CARTESIAN_MODE 4
+#define NB_JOINT_CARTESIAN_MODE 3
 #define LOCK std::lock_guard<std::mutex>
 
 struct Keybinds
@@ -194,10 +194,8 @@ private:
         motor_cmd_dynamixel.name = {"gripper_rotation", "gripper_grip"};
         motor_cmd_dynamixel.velocity = {0.0f, 0.0f};
 
-        // std::unique_lock<std::mutex> u_lock_watchdog(m_mutex_m_b_watchdog_is_alive);
         if (msg.buttons[m_keybind.button_enable] && m_b_watchdog_is_alive)
         {
-            // u_lock_watchdog.unlock();
             if (m_b_mode_cartesian && m_srv_diff_calc.exists())
             {
                 // Build request for call
@@ -207,21 +205,9 @@ private:
                     LOCK lock(m_mutex_m_af_angle);
                     request.angles[i] = m_af_angle[i];
                 }
-                request.cmd[0] = -msg.axes[m_keybind.axis_cmd_x];
+                request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
                 request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
-                request.cmd[2] = -msg.axes[m_keybind.axis_cmd_z];
-                if (msg.buttons[m_keybind.button_cmd_a_positive])
-                {
-                    request.cmd[3] = f_speed_factor;
-                }
-                else if (msg.buttons[m_keybind.button_cmd_a_negative])
-                {
-                    request.cmd[3] = -f_speed_factor;
-                }
-                else
-                {
-                    request.cmd[3] = 0.0f;
-                }
+                request.cmd[2] = msg.axes[m_keybind.axis_cmd_z];
 
                 // Calling service
                 rover_arm_msgs::diff_kinematics_calcResponse reponse;
@@ -239,14 +225,11 @@ private:
                                                  m_speed_modes.speed_cartesian_mode_divider;
                         }
 
-                        // ROS_WARN("CMD reponse= %f, %f, %f, %f",
-                        //          reponse.vitesses[0],
-                        //          reponse.vitesses[1],
-                        //          reponse.vitesses[2],
-                        //          reponse.vitesses[3]);
+                        // 
+                        motor_cmd[3].speed = -motor_cmd[1].speed;
 
                         float f_speed_limitor_factor = 1.0f;
-                        for (int i = 0; i < NB_JOINT_CARTESIAN_MODE; i++)
+                        for (int i = 0; i < NB_JOINT_CARTESIAN_MODE + 1; i++)
                         {
                             f_speed_factor = abs(m_af_joint_max_speed[i] / motor_cmd[i].speed);
                             f_speed_limitor_factor = f_speed_factor < f_speed_limitor_factor ? f_speed_factor : f_speed_limitor_factor;
@@ -271,14 +254,18 @@ private:
                 motor_cmd[m_n_current_joint].speed = f_speed_factor * msg.axes[m_keybind.axis_cmd_joint];
             }
 
-            // Last two joints
+            // Last 3 joints
+            if (msg.buttons[m_keybind.button_cmd_a_positive])
+            {
+                motor_cmd[3].speed += m_speed_modes.normal;
+            }
+            else if (msg.buttons[m_keybind.button_cmd_a_negative])
+            {
+                motor_cmd[3].speed -= m_speed_modes.normal;
+            }
+
             motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal * msg.axes[m_keybind.axis_cmd_gripper_rot];
             motor_cmd_dynamixel.velocity[1] = m_speed_modes.crawler * msg.axes[m_keybind.axis_cmd_gripper_grip];
-        }
-        else
-        {
-            // No needs to keep our lock locked
-            //  u_lock_watchdog.unlock();
         }
 
         // Sending msgs
