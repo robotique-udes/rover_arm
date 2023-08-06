@@ -30,7 +30,7 @@
 
         <group ns="j3">
             <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
-                <param name="port" value="/dev/serial/by-path/arg usb_id_prefix).3.3:1.0-port0" />
+                <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.3:1.0-port0" />
             </node>
         </group>
 
