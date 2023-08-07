@@ -207,7 +207,7 @@ private:
                 }
                 request.cmd[0] = msg.axes[m_keybind.axis_cmd_x];
                 request.cmd[1] = msg.axes[m_keybind.axis_cmd_y];
-                request.cmd[2] = -msg.axes[m_keybind.axis_cmd_z];
+                request.cmd[2] = msg.axes[m_keybind.axis_cmd_z];
 
                 // Calling service
                 rover_arm_msgs::diff_kinematics_calcResponse reponse;

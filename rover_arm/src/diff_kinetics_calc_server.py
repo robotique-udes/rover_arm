@@ -41,8 +41,6 @@ def build_jacobienne(q1, q2, q3):
     z_2 = J2y*m.sin(q1)*m.cos(q2) + J3y*m.sin(q1)*m.cos(q2+q3) - J2x*m.sin(q1)*-m.sin(q2) - J3x*m.sin(q1)*-m.sin(q2+q3)
     z_3 = J3y*m.sin(q1)*m.cos(q2+q3) - J3x*m.sin(q1)*-m.sin(q2+q3)
 
-
-
     #Make this matrix without a list because it won't work otherwise
     # [x_1, x_2, x_3],
     # [y_1, y_2, y_3],
