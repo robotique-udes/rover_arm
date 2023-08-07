@@ -17,19 +17,19 @@
         </group>
 
         <group ns="j1">
-            <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+            <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.4:1.0-port0" />
             </node>
         </group>
 
         <group ns="j2">
-            <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+            <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.2:1.0-port0" />
             </node>
         </group>
 
         <group ns="j3">
-            <node name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
+            <node machine="rover" name="joint_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
                 <param name="port" value="/dev/serial/by-path/$(arg usb_id_prefix).3.3:1.0-port0" />
             </node>
         </group>
