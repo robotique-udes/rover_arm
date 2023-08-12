@@ -264,8 +264,8 @@ private:
                 motor_cmd[3].speed -= m_speed_modes.fast;
             }
 
-            motor_cmd_dynamixel.velocity[0] = m_speed_modes.normal * msg.axes[m_keybind.axis_cmd_gripper_rot];
-            motor_cmd_dynamixel.velocity[1] = m_speed_modes.crawler * msg.axes[m_keybind.axis_cmd_gripper_grip];
+            motor_cmd_dynamixel.velocity[0] = -m_speed_modes.normal * msg.axes[m_keybind.axis_cmd_gripper_rot];
+            motor_cmd_dynamixel.velocity[1] = -m_speed_modes.crawler * msg.axes[m_keybind.axis_cmd_gripper_grip];
         }
 
         // Sending msgs

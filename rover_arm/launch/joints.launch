@@ -5,7 +5,7 @@
         <arg name="local_only" value="$(arg local_only)" />
     </include>
 
-    <arg name="usb_id_prefix" default="platform-3610000.xhci-usb-0:2.1.1.4" />
+    <arg name="usb_id_prefix" default="platform-3610000.xhci-usb-0:2.1.2" />
     <!-- <arg name="usb_id_prefix" default="pci-0000:00:14.0-usb-0:4" /> -->
 
     <group ns="arm">
